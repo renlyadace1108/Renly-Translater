@@ -1,4 +1,4 @@
-# ExamBilingualReader (四六级与雅思双语对照精读桌面端软件)
+# Renly Translater
 
 面向英语四六级与雅思备考的高效「双语对照翻译与长难句精读」桌面端软件。
 
