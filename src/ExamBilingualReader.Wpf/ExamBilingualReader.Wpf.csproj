@@ -8,9 +8,13 @@
     <UseWPF>true</UseWPF>
     <LangVersion>latest</LangVersion>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <AssemblyName>RenlyTranslater</AssemblyName>
     <Product>Renly Translater</Product>
     <AssemblyTitle>Renly Translater</AssemblyTitle>
     <Description>Renly Translater - 面向英语四六级与雅思备考的双语对照翻译与长难句精读桌面端软件</Description>
+    <Version>1.0.0</Version>
+    <FileVersion>1.0.0.0</FileVersion>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>
