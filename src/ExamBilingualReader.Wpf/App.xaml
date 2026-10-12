@@ -3,35 +3,75 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:ExamBilingualReader.Wpf">
     <Application.Resources>
-        <!-- 基础色彩与现代无衬线字体风格 -->
-        <SolidColorBrush x:Key="BackgroundBrush" Color="#1E1E24" />
-        <SolidColorBrush x:Key="CardBackgroundBrush" Color="#2A2A32" />
-        <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F3F4F6" />
-        <SolidColorBrush x:Key="TextSecondaryBrush" Color="#9CA3AF" />
-        <SolidColorBrush x:Key="BorderBrush" Color="#3F3F46" />
-        <SolidColorBrush x:Key="AccentBrush" Color="#6366F1" />
+        <!-- 极简高质感色彩体系 (Notion / Raycast 学术沉浸灰阶) -->
+        <Color x:Key="BgDark">#121316</Color>
+        <Color x:Key="PanelDark">#18191D</Color>
+        <Color x:Key="CardDark">#1E2025</Color>
+        <Color x:Key="CardHover">#26282F</Color>
+        <Color x:Key="BorderDark">#2C2F36</Color>
+        <Color x:Key="BorderLight">#383C45</Color>
 
+        <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BgDark}" />
+        <SolidColorBrush x:Key="PanelBackgroundBrush" Color="{StaticResource PanelDark}" />
+        <SolidColorBrush x:Key="CardBackgroundBrush" Color="{StaticResource CardDark}" />
+        <SolidColorBrush x:Key="CardHoverBrush" Color="{StaticResource CardHover}" />
+        <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderDark}" />
+
+        <!-- 文本色阶体系 -->
+        <SolidColorBrush x:Key="TextPrimaryBrush" Color="#ECEEF2" />
+        <SolidColorBrush x:Key="TextSecondaryBrush" Color="#8E95A3" />
+        <SolidColorBrush x:Key="TextMutedBrush" Color="#5A606E" />
+
+        <!-- 克制的主题强调色 (低饱和柔和靛蓝) -->
+        <SolidColorBrush x:Key="AccentBrush" Color="#4F6EF7" />
+
+        <!-- 统一字体 -->
         <Style TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="Segoe UI, Microsoft YaHei" />
+            <Setter Property="FontFamily" Value="Segoe UI, -apple-system, PingFang SC, Microsoft YaHei" />
             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
         </Style>
+
+        <!-- 极简无边框/微边框按钮 -->
+        <Style x:Key="ModernFlatButton" TargetType="Button">
+            <Setter Property="Background" Value="#22242B" />
+            <Setter Property="Foreground" Value="#D6DAE2" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderDark}" />
+            <Setter Property="Padding" Value="12,6" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                CornerRadius="5">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#2B2E37" />
+                                <Setter Property="Foreground" Value="#FFFFFF" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1C1D22" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="Button" BasedOn="{StaticResource ModernFlatButton}" />
 
         <Style TargetType="TextBox">
             <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}" />
             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderDark}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="8,6" />
             <Setter Property="FontSize" Value="14" />
-        </Style>
-
-        <Style TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource AccentBrush}" />
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="Padding" Value="12,6" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
     </Application.Resources>
 </Application>

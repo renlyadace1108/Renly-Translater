@@ -58,19 +58,19 @@ public static class ExamLevelHelper
     }
 
     /// <summary>
-    /// 获取考纲对应的 Hex 标亮颜色
+    /// 获取考纲对应的柔和标亮颜色 (克制低饱和度，护眼且具辨识度)
     /// </summary>
     public static string GetHighlightColorHex(ExamLevel level)
     {
         if (level.HasFlag(ExamLevel.IELTS) || level.HasFlag(ExamLevel.TOEFL) || level.HasFlag(ExamLevel.GRE))
-            return "#FF7043"; // 橙红 (学术/雅思)
+            return "#E06C75"; // 雅思/学术：柔和浅绯红
 
         if (level.HasFlag(ExamLevel.CET6))
-            return "#FBC02D"; // 亮黄 (六级)
+            return "#E5C07B"; // 六级：柔和暖琥珀金
 
         if (level.HasFlag(ExamLevel.CET4))
-            return "#66BB6A"; // 淡绿 (四级)
+            return "#98C379"; // 四级：柔和若竹绿
 
-        return "#9E9E9E"; // 基础灰
+        return "#ABB2BF"; // 基础灰
     }
 }
