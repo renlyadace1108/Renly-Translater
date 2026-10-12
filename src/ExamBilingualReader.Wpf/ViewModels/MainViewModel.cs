@@ -43,6 +43,9 @@ public partial class MainViewModel : ObservableObject
     private ObservableCollection<BilingualParagraph> _paragraphs = [];
 
     [ObservableProperty]
+    private ObservableCollection<BilingualSentencePair> _flatSentences = [];
+
+    [ObservableProperty]
     private BilingualSentencePair? _selectedSentence;
 
     [ObservableProperty]
@@ -154,12 +157,24 @@ public partial class MainViewModel : ObservableObject
             var parsed = await Task.Run(async () => await _articleProcessor.ProcessRawArticleAsync(ArticleInput));
 
             Paragraphs.Clear();
+            FlatSentences.Clear();
+
+            var flatList = new List<BilingualSentencePair>();
             foreach (var p in parsed)
             {
                 Paragraphs.Add(p);
+                flatList.AddRange(p.Sentences);
             }
 
-            StatusMessage = $"文章载入成功，共解析 {Paragraphs.SelectMany(p => p.Sentences).Count()} 个句子。";
+            foreach (var s in flatList)
+            {
+                FlatSentences.Add(s);
+            }
+
+            // 主动触发轻量 GC 释放临时大量分词字符串，降低内存驻留
+            GC.Collect(1, GCCollectionMode.Optimized, false);
+
+            StatusMessage = $"文章载入成功，共解析 {FlatSentences.Count} 个句子。";
         }
         catch (Exception ex)
         {
