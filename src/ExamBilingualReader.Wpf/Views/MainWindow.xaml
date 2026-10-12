@@ -342,6 +342,9 @@
                             </Border>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+
             <!-- 细致分割线 -->
             <GridSplitter Grid.Column="2" HorizontalAlignment="Stretch" Background="{StaticResource BorderBrush}"/>
 
