@@ -1,0 +1,32 @@
+<Window x:Class="ExamBilingualReader.Wpf.Views.ImportArticleWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="导入文章 / 真题素材" Height="500" Width="700"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource BackgroundBrush}">
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Margin="0,0,0,10">
+            <TextBlock Text="粘贴或载入英文真题 / 外刊原文" FontSize="16" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="打开 .txt 文件" Click="OnOpenFileClick" Background="#374151" Margin="0,0,8,0"/>
+                <Button Content="载入雅思真题示例" Click="OnLoadSampleIeltsClick" Background="#4F46E5" Margin="0,0,8,0"/>
+                <Button Content="载入四六级示例" Click="OnLoadSampleCetClick" Background="#2563EB"/>
+            </StackPanel>
+        </DockPanel>
+
+        <TextBox x:Name="TxtArticle" Grid.Row="1" TextWrapping="Wrap" AcceptsReturn="True" 
+                 VerticalScrollBarVisibility="Auto" FontSize="14" LineHeight="22"
+                 Padding="10" Background="{StaticResource CardBackgroundBrush}" Foreground="White" BorderBrush="{StaticResource BorderBrush}"/>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <Button Content="取消" Click="OnCancelClick" Background="#4B5563" Margin="0,0,10,0"/>
+            <Button Content="开始精读解析" Click="OnConfirmClick" Background="#10B981" FontWeight="Bold"/>
+        </StackPanel>
+    </Grid>
+</Window>

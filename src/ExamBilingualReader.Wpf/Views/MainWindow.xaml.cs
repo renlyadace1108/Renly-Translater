@@ -41,4 +41,21 @@ public partial class MainWindow : Window
         await vm.LoadEntriesAsync();
         notebookWindow.ShowDialog();
     }
+
+    private async void OnImportArticleClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel vm)
+        {
+            var dialog = new ImportArticleWindow(vm.ArticleInput)
+            {
+                Owner = this
+            };
+
+            if (dialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(dialog.ResultText))
+            {
+                vm.ArticleInput = dialog.ResultText;
+                await vm.LoadArticleCommand.ExecuteAsync(null);
+            }
+        }
+    }
 }

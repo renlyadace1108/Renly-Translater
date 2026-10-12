@@ -157,4 +157,56 @@ public partial class MainViewModel : ObservableObject
             ? $"已将单词 [{token.DictInfo.Word}] 收藏至生词本！" 
             : $"收藏失败。";
     }
+
+    [RelayCommand]
+    public async Task TranslateAllSentencesAsync()
+    {
+        var provider = CurrentProvider ?? _configService.GetActiveProvider();
+        if (provider == null)
+        {
+            StatusMessage = "请先配置 LLM 供应商 API Key。";
+            return;
+        }
+
+        var allSentences = Paragraphs.SelectMany(p => p.Sentences).Where(s => string.IsNullOrWhiteSpace(s.ChineseTranslation)).ToList();
+        if (allSentences.Count == 0)
+        {
+            StatusMessage = "所有句子均已存在译文。";
+            return;
+        }
+
+        IsBusy = true;
+        int completed = 0;
+        StatusMessage = $"开始批量翻译，共 {allSentences.Count} 句...";
+
+        try
+        {
+            foreach (var sentence in allSentences)
+            {
+                sentence.Status = AnalysisStatus.Analyzing;
+                try
+                {
+                    var translation = await _llmClient.TranslateSentenceAsync(provider, sentence.EnglishSentence);
+                    sentence.ChineseTranslation = translation;
+                    sentence.Status = AnalysisStatus.Completed;
+                }
+                catch
+                {
+                    sentence.Status = AnalysisStatus.Failed;
+                }
+
+                completed++;
+                StatusMessage = $"批量翻译进度: {completed} / {allSentences.Count}";
+            }
+            StatusMessage = "整篇文章批量双语对照翻译完成！";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"批量翻译中断: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
 }

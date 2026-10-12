@@ -16,7 +16,8 @@
             <DockPanel Margin="15,0">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="ExamBilingualReader" FontSize="16" FontWeight="Bold" Margin="0,0,20,0"/>
-                    <Button Content="导入/重新解析文章" Command="{Binding LoadArticleCommand}" Margin="0,0,10,0"/>
+                    <Button Content="导入文章/真题" Click="OnImportArticleClick" Margin="0,0,10,0"/>
+                    <Button Content="一键对照翻译整篇" Command="{Binding TranslateAllSentencesCommand}" Background="#7C3AED" Margin="0,0,10,0"/>
                     <Button Content="我的生词本" Click="OnOpenNotebookClick" Background="#059669" Margin="0,0,10,0"/>
                     <Button Content="模型配置 (BYOK)" Click="OnOpenSettingsClick" Background="#374151"/>
                 </StackPanel>
@@ -190,6 +191,9 @@
         <!-- 底部状态栏 -->
         <Border Grid.Row="2" Background="#111827" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="15,0">
             <DockPanel>
+                <ProgressBar IsIndeterminate="{Binding IsBusy}" Width="120" Height="10" Margin="15,0,0,0"
+                             DockPanel.Dock="Right" VerticalAlignment="Center"
+                             Visibility="{Binding IsBusy, Converter={x:Static local:BooleanToVisibilityConverter.Instance}}"/>
                 <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"/>
             </DockPanel>
         </Border>
