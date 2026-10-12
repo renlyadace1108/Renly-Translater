@@ -26,11 +26,19 @@ public class AppConfigService
             {
                 var json = await File.ReadAllTextAsync(ConfigFilePath);
                 var loaded = JsonSerializer.Deserialize<AppSettings>(json, _jsonOptions);
-                if (loaded != null && loaded.Providers.Count > 0)
+                var existingKey = loaded?.Providers.FirstOrDefault(p => !string.IsNullOrWhiteSpace(p.ApiKey))?.ApiKey ?? string.Empty;
+                var singleProvider = CreateDefaultProvider();
+                if (!string.IsNullOrWhiteSpace(existingKey))
                 {
-                    CurrentSettings = loaded;
-                    return;
+                    singleProvider.ApiKey = existingKey;
                 }
+                CurrentSettings = new AppSettings
+                {
+                    ActiveProviderId = singleProvider.Id,
+                    Providers = [singleProvider]
+                };
+                await SaveAsync();
+                return;
             }
             catch
             {
@@ -50,48 +58,31 @@ public class AppConfigService
 
     public LlmProviderConfig? GetActiveProvider()
     {
-        return CurrentSettings.Providers.FirstOrDefault(p => p.Id == CurrentSettings.ActiveProviderId)
-               ?? CurrentSettings.Providers.FirstOrDefault();
+        return CurrentSettings.Providers.FirstOrDefault(p => p.Id == "siliconflow_qwen7b")
+               ?? CurrentSettings.Providers.FirstOrDefault()
+               ?? CreateDefaultProvider();
+    }
+
+    public static LlmProviderConfig CreateDefaultProvider()
+    {
+        return new LlmProviderConfig
+        {
+            Id = "siliconflow_qwen7b",
+            Name = "SiliconFlow - Qwen2.5-7B-Instruct (永久免费)",
+            BaseUrl = "https://api.siliconflow.cn/v1",
+            ModelName = "Qwen/Qwen2.5-7B-Instruct",
+            Temperature = 0.2
+        };
     }
 
     public static AppSettings CreateDefaultSettings()
     {
-        var deepseek = new LlmProviderConfig
-        {
-            Id = "deepseek",
-            Name = "DeepSeek",
-            BaseUrl = "https://api.deepseek.com/v1",
-            ModelName = "deepseek-chat"
-        };
-
-        var siliconflow = new LlmProviderConfig
-        {
-            Id = "siliconflow",
-            Name = "SiliconFlow (硅基流动)",
-            BaseUrl = "https://api.siliconflow.cn/v1",
-            ModelName = "deepseek-ai/DeepSeek-V3"
-        };
-
-        var zhipu = new LlmProviderConfig
-        {
-            Id = "zhipu",
-            Name = "智谱 (GLM-4-Flash)",
-            BaseUrl = "https://open.bigmodel.cn/api/paas/v4",
-            ModelName = "glm-4-flash"
-        };
-
-        var ollama = new LlmProviderConfig
-        {
-            Id = "ollama",
-            Name = "本地 Ollama",
-            BaseUrl = "http://localhost:11434/v1",
-            ModelName = "qwen2.5:7b"
-        };
+        var qwenFree = CreateDefaultProvider();
 
         return new AppSettings
         {
-            ActiveProviderId = deepseek.Id,
-            Providers = [deepseek, siliconflow, zhipu, ollama]
+            ActiveProviderId = qwenFree.Id,
+            Providers = [qwenFree]
         };
     }
 }
