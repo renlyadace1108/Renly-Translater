@@ -12,9 +12,9 @@
         </Grid.RowDefinitions>
 
         <DockPanel Margin="0,0,0,10">
-            <TextBlock Text="粘贴或载入英文真题 / 外刊原文" FontSize="16" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+            <TextBlock Text="粘贴或载入英文真题 / 外刊原文 / PDF 文档" FontSize="16" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="打开 .txt 文件" Click="OnOpenFileClick" Background="#374151" Margin="0,0,8,0"/>
+                <Button Content="打开文件 (PDF / TXT)" Click="OnOpenFileClick" Background="#EA580C" Margin="0,0,8,0"/>
                 <Button Content="载入雅思真题示例" Click="OnLoadSampleIeltsClick" Background="#4F46E5" Margin="0,0,8,0"/>
                 <Button Content="载入四六级示例" Click="OnLoadSampleCetClick" Background="#2563EB"/>
             </StackPanel>

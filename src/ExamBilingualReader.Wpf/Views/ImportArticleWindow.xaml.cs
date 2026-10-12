@@ -18,13 +18,21 @@ public partial class ImportArticleWindow : Window
     {
         var ofd = new OpenFileDialog
         {
-            Filter = "文本文件 (*.txt)|*.txt|所有文件 (*.*)|*.*"
+            Filter = "文档文件 (*.pdf;*.txt)|*.pdf;*.txt|PDF 文件 (*.pdf)|*.pdf|文本文件 (*.txt)|*.txt|所有文件 (*.*)|*.*"
         };
         if (ofd.ShowDialog() == true)
         {
             try
             {
-                TxtArticle.Text = File.ReadAllText(ofd.FileName);
+                var ext = Path.GetExtension(ofd.FileName).ToLowerInvariant();
+                if (ext == ".pdf")
+                {
+                    TxtArticle.Text = ExamBilingualReader.Core.TextProcessing.PdfExtractor.ExtractText(ofd.FileName);
+                }
+                else
+                {
+                    TxtArticle.Text = File.ReadAllText(ofd.FileName);
+                }
             }
             catch (Exception ex)
             {
