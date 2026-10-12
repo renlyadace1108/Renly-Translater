@@ -35,8 +35,12 @@ public partial class App : Application
         Services = services.BuildServiceProvider();
     }
 
+    private static Mutex? _appMutex;
+
     protected override async void OnStartup(StartupEventArgs e)
     {
+        _appMutex = new Mutex(true, "Renly_Translater_Desktop_Mutex", out bool createdNew);
+
         base.OnStartup(e);
 
         var mainWindow = Services.GetRequiredService<MainWindow>();
@@ -45,5 +49,22 @@ public partial class App : Application
 
         await mainVm.InitializeAsync();
         mainWindow.Show();
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        if (_appMutex != null)
+        {
+            try
+            {
+                _appMutex.ReleaseMutex();
+            }
+            catch
+            {
+                // ignore
+            }
+            _appMutex.Dispose();
+        }
+        base.OnExit(e);
     }
 }
