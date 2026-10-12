@@ -2,7 +2,9 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ExamBilingualReader.Core.Models.Config;
+using ExamBilingualReader.Core.Models.ExamHub;
 using ExamBilingualReader.Core.Models.Reader;
+using ExamBilingualReader.Core.Models.Vocab;
 using ExamBilingualReader.Infrastructure.Data;
 using ExamBilingualReader.Infrastructure.Services;
 
