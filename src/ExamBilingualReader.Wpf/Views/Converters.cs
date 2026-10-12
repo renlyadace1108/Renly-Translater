@@ -23,6 +23,68 @@ public class BooleanToVisibilityConverter : IValueConverter
     }
 }
 
+public class MultiBooleanToVisibilityConverter : IMultiValueConverter
+{
+    public static readonly MultiBooleanToVisibilityConverter Instance = new();
+
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (values == null || values.Length < 2) return Visibility.Collapsed;
+        var isExamZone = values[0] is ExamBilingualReader.Wpf.ViewModels.ReadingZone zone && zone == ExamBilingualReader.Wpf.ViewModels.ReadingZone.ExamPreparation;
+        var isDrawerOpen = values[1] is bool b && b;
+        return (isExamZone && isDrawerOpen) ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class DrawerToggleTextConverter : IValueConverter
+{
+    public static readonly DrawerToggleTextConverter Instance = new();
+
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is bool isOpen && isOpen)
+        {
+            return "◀ 收起真题";
+        }
+        return "📁 展开真题";
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public class LayoutModeToButtonTextConverter : IValueConverter
+{
+    public static readonly LayoutModeToButtonTextConverter Instance = new();
+
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is ExamBilingualReader.Wpf.ViewModels.ReadingLayoutMode mode)
+        {
+            return mode switch
+            {
+                ExamBilingualReader.Wpf.ViewModels.ReadingLayoutMode.FullArticleContinuous => "📖 原文全文(拖选精读)",
+                ExamBilingualReader.Wpf.ViewModels.ReadingLayoutMode.ContinuousParagraph => "📑 自然段落考纲精读",
+                ExamBilingualReader.Wpf.ViewModels.ReadingLayoutMode.SentenceBySentence => "🗂 逐句双语对照卡片",
+                _ => "📖 排版模式"
+            };
+        }
+        return "📖 排版模式";
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
 public class ListJoinConverter : IValueConverter
 {
     public static readonly ListJoinConverter Instance = new();

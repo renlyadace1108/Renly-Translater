@@ -18,8 +18,9 @@ public enum ReadingZone
 
 public enum ReadingLayoutMode
 {
-    ContinuousParagraph, // 连贯自然段落沉浸阅读 (整段展示不单句分行)
-    SentenceBySentence   // 逐句对照卡片模式
+    FullArticleContinuous, // 原文整块连贯沉浸展示 (支持任意鼠标划词拖选分析)
+    ContinuousParagraph,   // 自然段落考纲精读 (带生词悬浮与考纲下划线)
+    SentenceBySentence     // 逐句对照卡片模式
 }
 
 public partial class MainViewModel : ObservableObject
@@ -34,7 +35,7 @@ public partial class MainViewModel : ObservableObject
     private ReadingZone _currentZone = ReadingZone.ExamPreparation;
 
     [ObservableProperty]
-    private ReadingLayoutMode _layoutMode = ReadingLayoutMode.ContinuousParagraph;
+    private ReadingLayoutMode _layoutMode = ReadingLayoutMode.FullArticleContinuous;
 
     [ObservableProperty]
     private ObservableCollection<GitHubExamPaperItem> _examPapers = [];
@@ -53,6 +54,9 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private ObservableCollection<BilingualSentencePair> _flatSentences = [];
+
+    [ObservableProperty]
+    private bool _isExamDrawerOpen = true; // 抽屉默认展开，可随时收起
 
     [ObservableProperty]
     private BilingualSentencePair? _selectedSentence;
@@ -110,9 +114,12 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     public void ToggleLayoutMode()
     {
-        LayoutMode = LayoutMode == ReadingLayoutMode.ContinuousParagraph 
-            ? ReadingLayoutMode.SentenceBySentence 
-            : ReadingLayoutMode.ContinuousParagraph;
+        LayoutMode = LayoutMode switch
+        {
+            ReadingLayoutMode.FullArticleContinuous => ReadingLayoutMode.ContinuousParagraph,
+            ReadingLayoutMode.ContinuousParagraph => ReadingLayoutMode.SentenceBySentence,
+            _ => ReadingLayoutMode.FullArticleContinuous
+        };
     }
 
     [RelayCommand]
@@ -211,12 +218,45 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    public void ToggleExamDrawer()
+    {
+        IsExamDrawerOpen = !IsExamDrawerOpen;
+    }
+
+    [RelayCommand]
     public void SelectSentence(BilingualSentencePair sentence)
     {
         if (sentence == null) return;
         SelectedSentence = sentence;
         CurrentAnalysis = sentence.AnalysisResult;
         StatusMessage = $"已选中第 {sentence.OrderIndex} 句。可点击右侧「精读分析此句」进行深度学术拆解。";
+    }
+
+    [RelayCommand]
+    public void SelectCustomText(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return;
+        text = text.Trim();
+
+        // 查找是否匹配现存句子，如果没有则创建一个临时选中项
+        var match = FlatSentences.FirstOrDefault(s => s.EnglishSentence.Trim() == text);
+        if (match != null)
+        {
+            SelectedSentence = match;
+            CurrentAnalysis = match.AnalysisResult;
+        }
+        else
+        {
+            var customPair = new BilingualSentencePair
+            {
+                OrderIndex = 0,
+                EnglishSentence = text
+            };
+            SelectedSentence = customPair;
+            CurrentAnalysis = null;
+        }
+
+        StatusMessage = $"已拖选文本 ({text.Length} 字符)。点击右侧「精读分析此句」开始 AI 结构拆解。";
     }
 
     [RelayCommand]

@@ -37,8 +37,13 @@
                     </Border>
 
                     <!-- 统一风格的极简功能操作按钮 -->
-                    <Button Content="📖 排版: 连贯自然段" Command="{Binding ToggleLayoutModeCommand}" Margin="0,0,8,0"
-                            ToolTip="在「连贯自然段落流式阅读」与「逐句卡片对照」之间无缝切换"/>
+                    <Button Content="{Binding IsExamDrawerOpen, Converter={x:Static local:DrawerToggleTextConverter.Instance}}" 
+                            Command="{Binding ToggleExamDrawerCommand}" Margin="0,0,8,0"
+                            ToolTip="展开或收回左侧真题列表抽屉，让阅读区获得更大视野"
+                            Visibility="{Binding CurrentZone, Converter={x:Static local:EnumEqualsToVisibilityConverter.Instance}, ConverterParameter=ExamPreparation}"/>
+                    <Button Content="{Binding LayoutMode, Converter={x:Static local:LayoutModeToButtonTextConverter.Instance}}" 
+                            Command="{Binding ToggleLayoutModeCommand}" Margin="0,0,8,0"
+                            ToolTip="在「全文沉浸拖选」、「自然段落精读」与「逐句卡片对照」之间无缝切换"/>
                     <Button Content="导入文档 (PDF/MD)" Click="OnImportArticleClick" Margin="0,0,8,0"/>
                     <Button Content="全篇对照翻译" Command="{Binding TranslateAllSentencesCommand}" Margin="0,0,8,0"/>
                     <Button Content="生词本" Click="OnOpenNotebookClick" Margin="0,0,8,0"/>
@@ -73,9 +78,14 @@
                 <ColumnDefinition Width="2*" />
             </Grid.ColumnDefinitions>
 
-            <!-- 四六级备考专区：真题列表面板 -->
-            <Border Grid.Column="0" Width="260" Background="{StaticResource PanelBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0"
-                    Visibility="{Binding CurrentZone, Converter={x:Static local:EnumEqualsToVisibilityConverter.Instance}, ConverterParameter=ExamPreparation}">
+            <!-- 四六级备考专区：真题列表面板 (支持自由展开/收回，让主阅读区视野最大化) -->
+            <Border Grid.Column="0" Width="260" Background="{StaticResource PanelBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0">
+                <Border.Visibility>
+                    <MultiBinding Converter="{x:Static local:MultiBooleanToVisibilityConverter.Instance}">
+                        <Binding Path="CurrentZone"/>
+                        <Binding Path="IsExamDrawerOpen"/>
+                    </MultiBinding>
+                </Border.Visibility>
                 <Grid Margin="12">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -141,8 +151,45 @@
                 </Grid>
             </Border>
 
-            <!-- 中央主阅读区：包含两种排版视图 -->
+            <!-- 中央主阅读区：包含三种排版视图 -->
             <Grid Grid.Column="1">
+                <!-- 视图 0：原文整块连贯沉浸展示 (全文连贯完整呈现，支持按住鼠标左键任意自由拖选长句/短语，松开后右侧自动同步并可一键 AI 精读拆解) -->
+                <ScrollViewer VerticalScrollBarVisibility="Hidden"
+                              HorizontalScrollBarVisibility="Disabled"
+                              Visibility="{Binding LayoutMode, Converter={x:Static local:EnumEqualsToVisibilityConverter.Instance}, ConverterParameter=FullArticleContinuous}">
+                    <Border Margin="28,14" Padding="26,22" Background="{StaticResource CardBackgroundBrush}" 
+                            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8">
+                        <StackPanel>
+                            <!-- 顶部提示横条 -->
+                            <Border Background="#181B22" BorderBrush="#252A36" BorderThickness="1" CornerRadius="5" Padding="12,8" Margin="0,0,0,16">
+                                <DockPanel>
+                                    <TextBlock Text="💡 提示：按住鼠标左键在下方自由拖拽框选任意长难句或短语，右侧长难句栏将实时同步该内容，点击「⚡ 精读分析此句」即可拆解语法结构。" 
+                                               Foreground="#8F98A8" FontSize="12" VerticalAlignment="Center"/>
+                                </DockPanel>
+                            </Border>
+
+                            <!-- 原文整块展示与划词选择框 -->
+                            <TextBox x:Name="FullArticleTextBox"
+                                     Text="{Binding ArticleInput, Mode=OneWay}"
+                                     IsReadOnly="True"
+                                     TextWrapping="Wrap"
+                                     Background="Transparent"
+                                     Foreground="{StaticResource TextPrimaryBrush}"
+                                     CaretBrush="#61AFEF"
+                                     SelectionBrush="#3E4452"
+                                     SelectionOpacity="0.65"
+                                     FontSize="15.5"
+                                     FontFamily="Segoe UI, Microsoft YaHei, Calibri"
+                                     LineHeight="28"
+                                     BorderThickness="0"
+                                     Padding="0"
+                                     Cursor="IBeam"
+                                     SelectionChanged="OnFullArticleSelectionChanged"
+                                     PreviewMouseLeftButtonUp="OnFullArticleMouseUp"/>
+                        </StackPanel>
+                    </Border>
+                </ScrollViewer>
+
                 <!-- 视图 1：连贯自然段落沉浸阅读 (整段展示不生硬分行，段落内单词流式排版，点击任意句子即可高亮精读) -->
                 <ListBox ItemsSource="{Binding Paragraphs}"
                          Background="Transparent" BorderThickness="0"

@@ -24,6 +24,32 @@ public partial class MainWindow : Window
         }
     }
 
+    private void OnFullArticleSelectionChanged(object sender, RoutedEventArgs e)
+    {
+        // 当用户拖拽选择文本时更新
+        if (sender is System.Windows.Controls.TextBox tb && DataContext is MainViewModel vm)
+        {
+            var text = tb.SelectedText;
+            if (!string.IsNullOrWhiteSpace(text) && text.Trim().Length > 3)
+            {
+                vm.SelectCustomText(text.Trim());
+            }
+        }
+    }
+
+    private void OnFullArticleMouseUp(object sender, MouseButtonEventArgs e)
+    {
+        // 鼠标松开时确认选区
+        if (sender is System.Windows.Controls.TextBox tb && DataContext is MainViewModel vm)
+        {
+            var text = tb.SelectedText;
+            if (!string.IsNullOrWhiteSpace(text) && text.Trim().Length > 1)
+            {
+                vm.SelectCustomText(text.Trim());
+            }
+        }
+    }
+
     private void OnOpenSettingsClick(object sender, RoutedEventArgs e)
     {
         var settingsWindow = App.Services.GetRequiredService<SettingsWindow>();
