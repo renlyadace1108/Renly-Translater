@@ -172,47 +172,50 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public async Task SelectSentenceAsync(BilingualSentencePair sentence)
+    public void SelectSentence(BilingualSentencePair sentence)
     {
+        if (sentence == null) return;
         SelectedSentence = sentence;
         CurrentAnalysis = sentence.AnalysisResult;
-
-        // 如果该句子尚未解析，且配置了 LLM，则自动或提示触发精读分析
-        if (sentence.AnalysisResult == null && sentence.Status == AnalysisStatus.NotStarted)
-        {
-            await AnalyzeCurrentSentenceAsync();
-        }
+        StatusMessage = $"已选中第 {sentence.OrderIndex} 句。可点击右侧「精读分析此句」进行深度学术拆解。";
     }
 
     [RelayCommand]
     public async Task AnalyzeCurrentSentenceAsync()
     {
         if (SelectedSentence == null) return;
+        if (SelectedSentence.Status == AnalysisStatus.Analyzing) return; // 防重复点击
+
         var provider = CurrentProvider ?? _configService.GetActiveProvider();
-        if (provider == null)
+        if (provider == null || string.IsNullOrWhiteSpace(provider.ApiKey))
         {
-            StatusMessage = "请先配置 LLM 供应商 API Key。";
+            StatusMessage = "提示: 请先在「模型设置」中配置 API Key 后再使用 AI 精读功能。";
             return;
         }
 
         SelectedSentence.Status = AnalysisStatus.Analyzing;
         IsBusy = true;
-        StatusMessage = $"正在使用 [{provider.Name}] 精读分析长难句...";
+        StatusMessage = $"正在通过 [{provider.Name}] 精读分析第 {SelectedSentence.OrderIndex} 句...";
 
         try
         {
-            var result = await _llmClient.AnalyzeSentenceAsync(provider, SelectedSentence.EnglishSentence);
+            var result = await Task.Run(async () => 
+                await _llmClient.AnalyzeSentenceAsync(provider, SelectedSentence.EnglishSentence));
+
             SelectedSentence.AnalysisResult = result;
-            SelectedSentence.ChineseTranslation = result.Translation;
+            if (string.IsNullOrWhiteSpace(SelectedSentence.ChineseTranslation))
+            {
+                SelectedSentence.ChineseTranslation = result.Translation;
+            }
             SelectedSentence.Status = AnalysisStatus.Completed;
             CurrentAnalysis = result;
-            StatusMessage = "句子精读解析完成！";
+            StatusMessage = "句子学术精读分析完成！";
         }
         catch (Exception ex)
         {
             SelectedSentence.Status = AnalysisStatus.Failed;
             SelectedSentence.ErrorMessage = ex.Message;
-            StatusMessage = $"解析长难句失败: {ex.Message}";
+            StatusMessage = $"长难句解析失败: {ex.Message}";
         }
         finally
         {

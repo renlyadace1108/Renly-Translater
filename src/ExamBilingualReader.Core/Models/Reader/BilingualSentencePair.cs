@@ -19,20 +19,61 @@ public class WordToken
     public bool HasExamHighlight => DictInfo != null && DictInfo.Level != ExamLevel.None;
 }
 
-public class BilingualSentencePair
+public class BilingualSentencePair : System.ComponentModel.INotifyPropertyChanged
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public int OrderIndex { get; set; }
     public string EnglishSentence { get; set; } = string.Empty;
-    public string ChineseTranslation { get; set; } = string.Empty;
 
-    // 分词及考点标记序列（供 WPF ItemsControl / Inline 流式展示与悬浮卡片绑定）
+    private string _chineseTranslation = string.Empty;
+    public string ChineseTranslation
+    {
+        get => _chineseTranslation;
+        set
+        {
+            if (_chineseTranslation != value)
+            {
+                _chineseTranslation = value;
+                OnPropertyChanged(nameof(ChineseTranslation));
+            }
+        }
+    }
+
     public List<WordToken> Tokens { get; set; } = [];
 
-    // LLM 解析状态与结构化结果
-    public AnalysisStatus Status { get; set; } = AnalysisStatus.NotStarted;
-    public SentenceAnalysisResult? AnalysisResult { get; set; }
+    private AnalysisStatus _status = AnalysisStatus.NotStarted;
+    public AnalysisStatus Status
+    {
+        get => _status;
+        set
+        {
+            if (_status != value)
+            {
+                _status = value;
+                OnPropertyChanged(nameof(Status));
+            }
+        }
+    }
+
+    private SentenceAnalysisResult? _analysisResult;
+    public SentenceAnalysisResult? AnalysisResult
+    {
+        get => _analysisResult;
+        set
+        {
+            if (_analysisResult != value)
+            {
+                _analysisResult = value;
+                OnPropertyChanged(nameof(AnalysisResult));
+            }
+        }
+    }
+
     public string? ErrorMessage { get; set; }
+
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged(string propertyName) =>
+        PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
 }
 
 public class BilingualParagraph

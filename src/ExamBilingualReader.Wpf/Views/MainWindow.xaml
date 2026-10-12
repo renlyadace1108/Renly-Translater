@@ -230,7 +230,11 @@
                             <StackPanel>
                                 <TextBlock Text="当前句子" Foreground="{StaticResource TextMutedBrush}" FontSize="11.5" Margin="0,0,0,6"/>
                                 <TextBlock Text="{Binding SelectedSentence.EnglishSentence, FallbackValue='(点击左侧任意句子开始精读拆解)'}" 
-                                           TextWrapping="Wrap" Foreground="{StaticResource TextPrimaryBrush}" FontSize="13.5" LineHeight="21" FontWeight="Medium"/>
+                                           TextWrapping="Wrap" Foreground="{StaticResource TextPrimaryBrush}" FontSize="13.5" LineHeight="21" FontWeight="Medium" Margin="0,0,0,10"/>
+                                
+                                <Button Content="⚡ 精读分析此句 (AI拆解)" Command="{Binding AnalyzeCurrentSentenceCommand}" 
+                                        Background="#2D3748" HorizontalAlignment="Left" Padding="14,6" FontSize="12"
+                                        IsEnabled="{Binding IsBusy, Converter={x:Static local:BooleanToInverseBooleanConverter.Instance}}" />
                             </StackPanel>
                         </Border>
 
