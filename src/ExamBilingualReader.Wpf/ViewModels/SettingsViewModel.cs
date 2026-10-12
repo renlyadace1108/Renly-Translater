@@ -139,6 +139,48 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
+    public void ApplyFontWeight(string weight)
+    {
+        ReaderStyle.FontWeight = weight;
+    }
+
+    [RelayCommand]
+    public void ApplyFontFamily(string family)
+    {
+        ReaderStyle.FontFamily = family;
+    }
+
+    [RelayCommand]
+    public void ApplyTextColor(string color)
+    {
+        ReaderStyle.TextColor = color;
+    }
+
+    [RelayCommand]
+    public void ApplyReadingBg(string color)
+    {
+        ReaderStyle.ReadingBackground = color;
+    }
+
+    [RelayCommand]
+    public void ApplyPageBg(string color)
+    {
+        ReaderStyle.PageBackground = color;
+    }
+
+    [RelayCommand]
+    public void IncreaseFontSize()
+    {
+        ReaderStyle.FontSize = Math.Min(32, ReaderStyle.FontSize + 1);
+    }
+
+    [RelayCommand]
+    public void DecreaseFontSize()
+    {
+        ReaderStyle.FontSize = Math.Max(12, ReaderStyle.FontSize - 1);
+    }
+
+    [RelayCommand]
     public async Task SaveSettingsAsync()
     {
         if (SelectedProvider == null || string.IsNullOrWhiteSpace(SelectedProvider.ApiKey))

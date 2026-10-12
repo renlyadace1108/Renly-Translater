@@ -13,58 +13,84 @@
             <RowDefinition Height="28" />
         </Grid.RowDefinitions>
 
-        <!-- 顶部精简导航栏 (去掉繁琐Logo，采用高质感扁平标签设计) -->
+        <!-- 顶部精简导航栏 (3栏分区结构：品牌与专区 / 阅读模式与抽屉控制 / 操作工具与考纲图例) -->
         <Border Grid.Row="0" Background="{StaticResource PanelBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
-            <DockPanel Margin="16,0">
-                <!-- 左侧工作专区胶囊切换器与高分辨率彩色Logo -->
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,18,0">
+            <Grid Margin="16,0">
+                <Grid.ColumnDefinitions>
+                    <!-- 左侧：品牌与专区切换 -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- 中间：阅读视窗与视图模式控制 -->
+                    <ColumnDefinition Width="*" />
+                    <!-- 右侧：功能操作、统一设置与考纲图例 -->
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- 左侧：品牌彩色Logo与工作专区切换 -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0">
                         <Image Source="pack://application:,,,/Assets/app.png" Width="26" Height="26" Margin="0,0,8,0" RenderOptions.BitmapScalingMode="HighQuality"/>
                         <TextBlock Text="Renly Translater" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Bold" FontSize="14.5" VerticalAlignment="Center"/>
                     </StackPanel>
 
-                    <Border Background="#121316" CornerRadius="6" Padding="2" Margin="0,0,20,0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                    <!-- 垂直分隔线 -->
+                    <Rectangle Width="1" Height="18" Fill="{StaticResource BorderBrush}" Margin="0,0,16,0" VerticalAlignment="Center"/>
+
+                    <!-- 工作专区胶囊切换器 -->
+                    <Border Background="#121316" CornerRadius="6" Padding="2" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
                         <StackPanel Orientation="Horizontal">
                             <RadioButton Content="四六级备考" GroupName="ZoneGroup" IsChecked="True"
                                          Click="OnExamZoneClick"
                                          Style="{StaticResource {x:Type ToggleButton}}" Background="#252730" Foreground="#ECEEF2"
-                                         Padding="14,5" BorderThickness="0" Cursor="Hand" FontSize="12.5" FontWeight="Medium"/>
+                                         Padding="12,5" BorderThickness="0" Cursor="Hand" FontSize="12" FontWeight="Medium"/>
                             <RadioButton Content="学术外刊阅读" GroupName="ZoneGroup"
                                          Click="OnGeneralArticleZoneClick"
                                          Style="{StaticResource {x:Type ToggleButton}}" Background="Transparent" Foreground="#8E95A3"
-                                         Padding="14,5" BorderThickness="0" Cursor="Hand" FontSize="12.5" FontWeight="Medium" Margin="2,0,0,0"/>
+                                         Padding="12,5" BorderThickness="0" Cursor="Hand" FontSize="12" FontWeight="Medium" Margin="2,0,0,0"/>
                         </StackPanel>
                     </Border>
+                </StackPanel>
 
-                    <!-- 统一风格的极简功能操作按钮 -->
+                <!-- 中间：阅读视图与真题抽屉控制 (居中排布，阅读核心功能清晰聚焦) -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <!-- 真题抽屉展开/收起 -->
                     <Button Content="{Binding IsExamDrawerOpen, Converter={x:Static local:DrawerToggleTextConverter.Instance}}" 
-                            Command="{Binding ToggleExamDrawerCommand}" Margin="0,0,8,0"
+                            Command="{Binding ToggleExamDrawerCommand}" Margin="0,0,10,0" Padding="12,5"
                             ToolTip="展开或收回左侧真题列表抽屉，让阅读区获得更大视野"
                             Visibility="{Binding CurrentZone, Converter={x:Static local:EnumEqualsToVisibilityConverter.Instance}, ConverterParameter=ExamPreparation}"/>
+
+                    <!-- 排版模式切换 -->
                     <Button Content="{Binding LayoutMode, Converter={x:Static local:LayoutModeToButtonTextConverter.Instance}}" 
-                            Command="{Binding ToggleLayoutModeCommand}" Margin="0,0,8,0"
+                            Command="{Binding ToggleLayoutModeCommand}" Padding="12,5"
                             ToolTip="在「全文沉浸拖选」、「自然段落精读」与「逐句卡片对照」之间无缝切换"/>
-                    <Button Content="导入文档 (PDF/MD)" Click="OnImportArticleClick" Margin="0,0,8,0"/>
-                    <Button Content="全篇对照翻译" Command="{Binding TranslateAllSentencesCommand}" Margin="0,0,8,0"/>
-                    <Button Content="生词本" Click="OnOpenNotebookClick" Margin="0,0,8,0"/>
-                    <Button Content="🎨 排版外观" Click="OnOpenStyleSettingsClick" Margin="0,0,8,0" ToolTip="自定义阅读字体、字号、粗细及页面背景颜色"/>
-                    <Button Content="模型设置" Click="OnOpenSettingsClick"/>
                 </StackPanel>
-                
-                <!-- 右侧极简考纲色块图例（微圆角扁平胶囊） -->
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <TextBlock Text="考纲标注" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,10,0" FontSize="11.5"/>
-                    <Border Background="#1C261A" BorderBrush="#2F4F28" BorderThickness="1" CornerRadius="4" Padding="7,2" Margin="0,0,6,0">
-                        <TextBlock Text="CET-4" Foreground="#98C379" FontSize="11" FontWeight="SemiBold"/>
-                    </Border>
-                    <Border Background="#2A2415" BorderBrush="#54441F" BorderThickness="1" CornerRadius="4" Padding="7,2" Margin="0,0,6,0">
-                        <TextBlock Text="CET-6" Foreground="#E5C07B" FontSize="11" FontWeight="SemiBold"/>
-                    </Border>
-                    <Border Background="#2B191B" BorderBrush="#5C2B30" BorderThickness="1" CornerRadius="4" Padding="7,2">
-                        <TextBlock Text="雅思 / 托福" Foreground="#E06C75" FontSize="11" FontWeight="SemiBold"/>
-                    </Border>
+
+                <!-- 右侧：文档操作工具、统一设置与考纲图例 -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Content="📥 导入文档" Click="OnImportArticleClick" Margin="0,0,8,0" Padding="10,5" ToolTip="导入本地 PDF 或 Markdown 文档"/>
+                    <Button Content="🌐 全篇对照" Command="{Binding TranslateAllSentencesCommand}" Margin="0,0,8,0" Padding="10,5" ToolTip="一键进行全篇双语精读对照翻译"/>
+                    <Button Content="⭐ 生词本" Click="OnOpenNotebookClick" Margin="0,0,8,0" Padding="10,5" ToolTip="查看并复习生词摘录"/>
+
+                    <!-- 垂直分隔线 -->
+                    <Rectangle Width="1" Height="18" Fill="{StaticResource BorderBrush}" Margin="4,0,10,0" VerticalAlignment="Center"/>
+
+                    <!-- 统一系统设置 (整合 AI模型/API 与 自定义字体外观主题) -->
+                    <Button Content="⚙️ 系统设置" Click="OnOpenSettingsClick" Margin="0,0,14,0" Padding="10,5" ToolTip="配置 AI 模型、API Key 以及自定义阅读字体、字号、颜色与背景主题"/>
+
+                    <!-- 考纲标注色块图例 -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="考纲" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,6,0" FontSize="11"/>
+                        <Border Background="#1C261A" BorderBrush="#2F4F28" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,4,0">
+                            <TextBlock Text="CET-4" Foreground="#98C379" FontSize="10.5" FontWeight="SemiBold"/>
+                        </Border>
+                        <Border Background="#2A2415" BorderBrush="#54441F" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,4,0">
+                            <TextBlock Text="CET-6" Foreground="#E5C07B" FontSize="10.5" FontWeight="SemiBold"/>
+                        </Border>
+                        <Border Background="#2B191B" BorderBrush="#5C2B30" BorderThickness="1" CornerRadius="4" Padding="6,2">
+                            <TextBlock Text="雅/托" Foreground="#E06C75" FontSize="10.5" FontWeight="SemiBold"/>
+                        </Border>
+                    </StackPanel>
                 </StackPanel>
-            </DockPanel>
+            </Grid>
         </Border>
 
         <!-- 主内容区域：[真题抽屉] + [双栏对照精读区] + [长难句结构解析侧边栏] -->

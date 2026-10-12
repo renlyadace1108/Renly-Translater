@@ -68,12 +68,13 @@
         <Style TargetType="Button" BasedOn="{StaticResource ModernFlatButton}" />
 
         <Style TargetType="TextBox">
-            <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}" />
+            <Setter Property="Background" Value="#1E2025" />
             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="8,6" />
-            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Padding" Value="10,7" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="CaretBrush" Value="#4F6EF7" />
         </Style>
     </Application.Resources>
 </Application>
