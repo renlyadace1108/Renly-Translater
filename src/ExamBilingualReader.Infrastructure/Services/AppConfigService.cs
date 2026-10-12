@@ -26,19 +26,14 @@ public class AppConfigService
             {
                 var json = await File.ReadAllTextAsync(ConfigFilePath);
                 var loaded = JsonSerializer.Deserialize<AppSettings>(json, _jsonOptions);
-                var existingKey = loaded?.Providers.FirstOrDefault(p => !string.IsNullOrWhiteSpace(p.ApiKey))?.ApiKey ?? string.Empty;
-                var singleProvider = CreateDefaultProvider();
-                if (!string.IsNullOrWhiteSpace(existingKey))
+                if (loaded != null && loaded.Providers.Count > 0)
                 {
-                    singleProvider.ApiKey = existingKey;
+                    CurrentSettings = loaded;
+                    var active = CurrentSettings.Providers.FirstOrDefault(p => p.Id == CurrentSettings.ActiveProviderId)
+                                 ?? CurrentSettings.Providers.First();
+                    CurrentSettings.ActiveProviderId = active.Id;
+                    return;
                 }
-                CurrentSettings = new AppSettings
-                {
-                    ActiveProviderId = singleProvider.Id,
-                    Providers = [singleProvider]
-                };
-                await SaveAsync();
-                return;
             }
             catch
             {
@@ -56,9 +51,9 @@ public class AppConfigService
         await File.WriteAllTextAsync(ConfigFilePath, json);
     }
 
-    public LlmProviderConfig? GetActiveProvider()
+    public LlmProviderConfig GetActiveProvider()
     {
-        return CurrentSettings.Providers.FirstOrDefault(p => p.Id == "siliconflow_qwen7b")
+        return CurrentSettings.Providers.FirstOrDefault(p => p.Id == CurrentSettings.ActiveProviderId)
                ?? CurrentSettings.Providers.FirstOrDefault()
                ?? CreateDefaultProvider();
     }
@@ -67,22 +62,22 @@ public class AppConfigService
     {
         return new LlmProviderConfig
         {
-            Id = "siliconflow_qwen7b",
-            Name = "SiliconFlow - Qwen2.5-7B-Instruct (永久免费)",
+            Id = "custom_llm",
+            Name = "自定义 LLM 模型",
             BaseUrl = "https://api.siliconflow.cn/v1",
-            ModelName = "Qwen/Qwen2.5-7B-Instruct",
+            ModelName = "deepseek-ai/DeepSeek-V3",
             Temperature = 0.2
         };
     }
 
     public static AppSettings CreateDefaultSettings()
     {
-        var qwenFree = CreateDefaultProvider();
+        var defaultProvider = CreateDefaultProvider();
 
         return new AppSettings
         {
-            ActiveProviderId = qwenFree.Id,
-            Providers = [qwenFree]
+            ActiveProviderId = defaultProvider.Id,
+            Providers = [defaultProvider]
         };
     }
 }

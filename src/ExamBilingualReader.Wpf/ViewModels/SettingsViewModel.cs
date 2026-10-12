@@ -73,6 +73,39 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
+    public void ApplyPreset(string presetKey)
+    {
+        if (SelectedProvider == null) return;
+        switch (presetKey)
+        {
+            case "SiliconFlow-DeepSeek-V3":
+                SelectedProvider.Name = "SiliconFlow DeepSeek-V3";
+                SelectedProvider.BaseUrl = "https://api.siliconflow.cn/v1";
+                SelectedProvider.ModelName = "deepseek-ai/DeepSeek-V3";
+                TestStatus = "已切换为 DeepSeek-V3 预设（极强长难句拆解与句法分析能力）";
+                break;
+            case "SiliconFlow-Qwen-72B":
+                SelectedProvider.Name = "SiliconFlow Qwen-72B";
+                SelectedProvider.BaseUrl = "https://api.siliconflow.cn/v1";
+                SelectedProvider.ModelName = "Qwen/Qwen2.5-72B-Instruct";
+                TestStatus = "已切换为通义千问 72B 预设（高精度中文翻译与语法）";
+                break;
+            case "DeepSeek-Official":
+                SelectedProvider.Name = "DeepSeek 官方 API";
+                SelectedProvider.BaseUrl = "https://api.deepseek.com/v1";
+                SelectedProvider.ModelName = "deepseek-chat";
+                TestStatus = "已切换为 DeepSeek 官方接口预设";
+                break;
+            case "SiliconFlow-Qwen-7B-Free":
+                SelectedProvider.Name = "SiliconFlow Qwen-7B (免费)";
+                SelectedProvider.BaseUrl = "https://api.siliconflow.cn/v1";
+                SelectedProvider.ModelName = "Qwen/Qwen2.5-7B-Instruct";
+                TestStatus = "已切换为 Qwen-7B 免费预设";
+                break;
+        }
+    }
+
+    [RelayCommand]
     public async Task SaveSettingsAsync()
     {
         if (SelectedProvider == null || string.IsNullOrWhiteSpace(SelectedProvider.ApiKey))
@@ -81,24 +114,22 @@ public partial class SettingsViewModel : ObservableObject
             return;
         }
 
+        if (string.IsNullOrWhiteSpace(SelectedProvider.ModelName))
+        {
+            TestStatus = "⚠️ 模型名称不能为空，请填写要使用的模型名称！";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(SelectedProvider.BaseUrl))
+        {
+            TestStatus = "⚠️ 接口地址 (Base URL) 不能为空！";
+            return;
+        }
+
         _configService.CurrentSettings.ActiveProviderId = SelectedProvider.Id;
         _configService.CurrentSettings.Providers = Providers.ToList();
         await _configService.SaveAsync();
         TestStatus = "设置已保存！";
         RequestClose?.Invoke();
-    }
-
-    [RelayCommand]
-    public void AddCustomProvider()
-    {
-        var custom = new LlmProviderConfig
-        {
-            Id = Guid.NewGuid().ToString("N"),
-            Name = "自定义 OpenAI 兼容接口",
-            BaseUrl = "https://api.openai.com/v1",
-            ModelName = "gpt-4o-mini"
-        };
-        Providers.Add(custom);
-        SelectedProvider = custom;
     }
 }

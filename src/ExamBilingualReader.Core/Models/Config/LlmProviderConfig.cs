@@ -1,3 +1,6 @@
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+
 namespace ExamBilingualReader.Core.Models.Config;
 
 public enum ProxyType
@@ -17,16 +20,79 @@ public class ProxyConfig
     public string? Password { get; set; }
 }
 
-public class LlmProviderConfig
+public class LlmProviderConfig : INotifyPropertyChanged
 {
-    public string Id { get; set; } = Guid.NewGuid().ToString("N");
-    public string Name { get; set; } = "DeepSeek";
-    public string BaseUrl { get; set; } = "https://api.deepseek.com/v1";
-    public string ApiKey { get; set; } = string.Empty;
-    public string ModelName { get; set; } = "deepseek-chat";
-    public int TimeoutSeconds { get; set; } = 30;
-    public double Temperature { get; set; } = 0.2;
-    public ProxyConfig Proxy { get; set; } = new();
+    private string _id = Guid.NewGuid().ToString("N");
+    private string _name = "自定义模型";
+    private string _baseUrl = "https://api.siliconflow.cn/v1";
+    private string _apiKey = string.Empty;
+    private string _modelName = "deepseek-ai/DeepSeek-V3";
+    private int _timeoutSeconds = 30;
+    private double _temperature = 0.2;
+    private ProxyConfig _proxy = new();
+
+    public string Id
+    {
+        get => _id;
+        set => SetField(ref _id, value);
+    }
+
+    public string Name
+    {
+        get => _name;
+        set => SetField(ref _name, value);
+    }
+
+    public string BaseUrl
+    {
+        get => _baseUrl;
+        set => SetField(ref _baseUrl, value);
+    }
+
+    public string ApiKey
+    {
+        get => _apiKey;
+        set => SetField(ref _apiKey, value);
+    }
+
+    public string ModelName
+    {
+        get => _modelName;
+        set => SetField(ref _modelName, value);
+    }
+
+    public int TimeoutSeconds
+    {
+        get => _timeoutSeconds;
+        set => SetField(ref _timeoutSeconds, value);
+    }
+
+    public double Temperature
+    {
+        get => _temperature;
+        set => SetField(ref _temperature, value);
+    }
+
+    public ProxyConfig Proxy
+    {
+        get => _proxy;
+        set => SetField(ref _proxy, value);
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
+    }
 }
 
 public class AppSettings
