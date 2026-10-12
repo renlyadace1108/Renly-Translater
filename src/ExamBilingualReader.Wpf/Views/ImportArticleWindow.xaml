@@ -46,7 +46,7 @@
         </Border>
 
         <TextBox x:Name="TxtArticle" Grid.Row="1" TextWrapping="Wrap" AcceptsReturn="True" 
-                 VerticalScrollBarVisibility="Auto" FontSize="14" LineHeight="22"
+                 VerticalScrollBarVisibility="Auto" FontSize="14"
                  Padding="10" Background="{StaticResource CardBackgroundBrush}" Foreground="White" BorderBrush="{StaticResource BorderBrush}"/>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">

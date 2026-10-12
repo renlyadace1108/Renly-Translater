@@ -1,6 +1,7 @@
 <Window x:Class="ExamBilingualReader.Wpf.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:ExamBilingualReader.Wpf.Views"
         Title="ExamBilingualReader - 双语对照精读" Height="820" Width="1360"
         Icon="pack://application:,,,/Assets/app.ico"
         WindowStartupLocation="CenterScreen"
