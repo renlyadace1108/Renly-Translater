@@ -6,20 +6,37 @@
         Background="{StaticResource BackgroundBrush}">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="50" />
+            <RowDefinition Height="56" />
             <RowDefinition Height="*" />
             <RowDefinition Height="30" />
         </Grid.RowDefinitions>
 
-        <!-- 顶部工具栏 -->
+        <!-- 顶部工具栏与专区切换 -->
         <Border Grid.Row="0" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
             <DockPanel Margin="15,0">
+                <!-- 左侧软件标题与专区选项卡 (Tab) -->
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="ExamBilingualReader" FontSize="16" FontWeight="Bold" Margin="0,0,20,0"/>
-                    <Button Content="导入文章/真题" Click="OnImportArticleClick" Margin="0,0,10,0"/>
-                    <Button Content="一键对照翻译整篇" Command="{Binding TranslateAllSentencesCommand}" Background="#7C3AED" Margin="0,0,10,0"/>
-                    <Button Content="我的生词本" Click="OnOpenNotebookClick" Background="#059669" Margin="0,0,10,0"/>
-                    <Button Content="模型配置 (BYOK)" Click="OnOpenSettingsClick" Background="#374151"/>
+                    <TextBlock Text="ExamBilingualReader" FontSize="16" FontWeight="Bold" Margin="0,0,25,0" VerticalAlignment="Center"/>
+
+                    <!-- 专区切换按钮组 -->
+                    <Border Background="#1E1E24" CornerRadius="6" Padding="3" Margin="0,0,20,0">
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton Content=" 🎓 四六级真题备考区 " GroupName="ZoneGroup" IsChecked="True"
+                                         Click="OnExamZoneClick"
+                                         Style="{StaticResource {x:Type ToggleButton}}" Background="#2563EB" Foreground="White"
+                                         Padding="12,5" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold"/>
+                            <RadioButton Content=" 📰 英语文章 / 学术外刊区 " GroupName="ZoneGroup"
+                                         Click="OnGeneralArticleZoneClick"
+                                         Style="{StaticResource {x:Type ToggleButton}}" Background="#374151" Foreground="White"
+                                         Padding="12,5" BorderThickness="0" Cursor="Hand" FontWeight="SemiBold" Margin="4,0,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 操作按钮 -->
+                    <Button Content="📁 导入本地文章/PDF" Click="OnImportArticleClick" Margin="0,0,8,0" Background="#EA580C"/>
+                    <Button Content="⚡ 一键全篇翻译" Command="{Binding TranslateAllSentencesCommand}" Background="#7C3AED" Margin="0,0,8,0"/>
+                    <Button Content="★ 生词本" Click="OnOpenNotebookClick" Background="#059669" Margin="0,0,8,0"/>
+                    <Button Content="⚙ 模型配置 (BYOK)" Click="OnOpenSettingsClick" Background="#374151"/>
                 </StackPanel>
                 
                 <!-- 考纲图例指示 -->
@@ -32,16 +49,62 @@
             </DockPanel>
         </Border>
 
-        <!-- 主内容区域：左侧双栏精读 + 右侧长难句解析侧边栏 -->
+        <!-- 主内容区域：[真题导航抽屉] + [双栏精读区] + [长难句解析侧边栏] -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
+                <!-- 四六级真题备考专用导航栏 (在文章模式下可折叠) -->
+                <ColumnDefinition Width="Auto" />
+                <!-- 双语对照阅读主视区 -->
                 <ColumnDefinition Width="3*" />
                 <ColumnDefinition Width="5" />
+                <!-- 右侧长难句解析与考点拆解栏 -->
                 <ColumnDefinition Width="2*" />
             </Grid.ColumnDefinitions>
 
-            <!-- 左侧：双语对照阅读区 -->
-            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+            <!-- 四六级备考专区：真题快速选择面板 -->
+            <Border Grid.Column="0" Width="260" Background="#18181B" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,1,0"
+                    Visibility="{Binding CurrentZone, Converter={x:Static local:EnumEqualsToVisibilityConverter.Instance}, ConverterParameter=ExamPreparation}">
+                <Grid Margin="12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="历年真题库 (GitHub实时)" FontWeight="Bold" FontSize="14" Foreground="#60A5FA" Margin="0,0,0,8"/>
+
+                    <!-- 分类筛选器 -->
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button Content="全部" Command="{Binding FilterExamCategoryCommand}" CommandParameter="ALL" Padding="8,3" FontSize="11" Margin="0,0,4,0"/>
+                        <Button Content="CET-4 四级" Command="{Binding FilterExamCategoryCommand}" CommandParameter="CET4" Padding="8,3" FontSize="11" Margin="0,0,4,0" Background="#16A34A"/>
+                        <Button Content="CET-6 六级" Command="{Binding FilterExamCategoryCommand}" CommandParameter="CET6" Padding="8,3" FontSize="11" Background="#CA8A04"/>
+                    </StackPanel>
+
+                    <!-- 真题列表 -->
+                    <ListBox Grid.Row="2" ItemsSource="{Binding ExamPapers}" SelectedItem="{Binding SelectedExamPaper}"
+                             Background="#09090B" BorderBrush="#27272A"
+                             SelectionChanged="OnExamPaperSelectionChanged">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Padding="6,6" Margin="0,2" Background="#18181B" CornerRadius="4">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Border Background="#2563EB" CornerRadius="3" Padding="4,1" Margin="0,0,6,0">
+                                                <TextBlock Text="{Binding Category}" FontSize="10" Foreground="White" FontWeight="Bold"/>
+                                            </Border>
+                                            <TextBlock Text="{Binding YearMonth}" Foreground="#A1A1AA" FontSize="11" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Title}" Foreground="White" FontSize="12" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+
+            <!-- 双语对照阅读区 -->
+            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
                 <ItemsControl ItemsSource="{Binding Paragraphs}" Margin="20">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
@@ -121,10 +184,10 @@
             </ScrollViewer>
 
             <!-- 分割线 -->
-            <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" Background="#27272A"/>
+            <GridSplitter Grid.Column="2" HorizontalAlignment="Stretch" Background="#27272A"/>
 
             <!-- 右侧：长难句结构解析侧边栏 -->
-            <Border Grid.Column="2" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1,0,0,0" Padding="15">
+            <Border Grid.Column="3" Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1,0,0,0" Padding="15">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <TextBlock Text="长难句学术精读分析" FontSize="17" FontWeight="Bold" Margin="0,0,0,15"/>

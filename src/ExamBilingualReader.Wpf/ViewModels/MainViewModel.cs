@@ -8,12 +8,31 @@ using ExamBilingualReader.Infrastructure.Services;
 
 namespace ExamBilingualReader.Wpf.ViewModels;
 
+public enum ReadingZone
+{
+    GeneralArticle, // 英语学术/外刊文章区
+    ExamPreparation // 四六级真题备考区
+}
+
 public partial class MainViewModel : ObservableObject
 {
     private readonly AppConfigService _configService;
     private readonly IOpenAiClient _llmClient;
     private readonly IDictionaryRepository _dictionaryRepo;
     private readonly IArticleProcessingService _articleProcessor;
+    private readonly IExamHubService _examHub;
+
+    [ObservableProperty]
+    private ReadingZone _currentZone = ReadingZone.ExamPreparation;
+
+    [ObservableProperty]
+    private ObservableCollection<GitHubExamPaperItem> _examPapers = [];
+
+    [ObservableProperty]
+    private GitHubExamPaperItem? _selectedExamPaper;
+
+    [ObservableProperty]
+    private string _examFilterCategory = "ALL"; // ALL, CET4, CET6
 
     [ObservableProperty]
     private string _articleInput = "According to Smith et al., cognitive load increases during complex academic tasks (e.g., reading dense texts). This is confirmed by Fig. 3 in the paper.\n\nSubstantial research indicates that the phenomenon of cognitive fatigue is ubiquitous, but proper strategies can mitigate its impact.";
@@ -42,12 +61,14 @@ public partial class MainViewModel : ObservableObject
         AppConfigService configService,
         IOpenAiClient llmClient,
         IDictionaryRepository dictionaryRepo,
-        IArticleProcessingService articleProcessor)
+        IArticleProcessingService articleProcessor,
+        IExamHubService examHub)
     {
         _configService = configService;
         _llmClient = llmClient;
         _dictionaryRepo = dictionaryRepo;
         _articleProcessor = articleProcessor;
+        _examHub = examHub;
     }
 
     public async Task InitializeAsync()
@@ -55,7 +76,66 @@ public partial class MainViewModel : ObservableObject
         await _configService.InitializeAsync();
         await _dictionaryRepo.InitializeDatabaseAsync();
         CurrentProvider = _configService.GetActiveProvider();
+        await LoadExamPapersAsync();
         await LoadArticleAsync();
+    }
+
+    [RelayCommand]
+    public void SwitchZone(ReadingZone zone)
+    {
+        CurrentZone = zone;
+    }
+
+    [RelayCommand]
+    public async Task LoadExamPapersAsync()
+    {
+        try
+        {
+            var papers = await _examHub.FetchLatestExamPapersAsync();
+            ExamPapers.Clear();
+            foreach (var p in papers)
+            {
+                if (ExamFilterCategory == "ALL" || p.Category.Equals(ExamFilterCategory, StringComparison.OrdinalIgnoreCase))
+                {
+                    ExamPapers.Add(p);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"加载真题列表提示: {ex.Message}";
+        }
+    }
+
+    [RelayCommand]
+    public async Task FilterExamCategoryAsync(string category)
+    {
+        ExamFilterCategory = category;
+        await LoadExamPapersAsync();
+    }
+
+    [RelayCommand]
+    public async Task SelectExamPaperAsync(GitHubExamPaperItem paper)
+    {
+        if (paper == null) return;
+        SelectedExamPaper = paper;
+        IsBusy = true;
+        StatusMessage = $"正在从 GitHub 拉取 [{paper.Title}] 真题全文...";
+        try
+        {
+            var content = await _examHub.DownloadPaperContentAsync(paper.DownloadUrl);
+            ArticleInput = content;
+            await LoadArticleAsync();
+            StatusMessage = $"已成功载入真题: {paper.Title}";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"拉取真题失败: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     [RelayCommand]

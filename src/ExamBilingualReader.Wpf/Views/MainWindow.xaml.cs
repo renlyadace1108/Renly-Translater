@@ -58,4 +58,31 @@ public partial class MainWindow : Window
             }
         }
     }
+
+    private void OnExamZoneClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel vm)
+        {
+            vm.SwitchZoneCommand.Execute(ReadingZone.ExamPreparation);
+        }
+    }
+
+    private void OnGeneralArticleZoneClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel vm)
+        {
+            vm.SwitchZoneCommand.Execute(ReadingZone.GeneralArticle);
+        }
+    }
+
+    private async void OnExamPaperSelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.ListBox list && list.SelectedItem is ExamBilingualReader.Core.Models.ExamHub.GitHubExamPaperItem paper)
+        {
+            if (DataContext is MainViewModel vm)
+            {
+                await vm.SelectExamPaperCommand.ExecuteAsync(paper);
+            }
+        }
+    }
 }
