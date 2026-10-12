@@ -16,6 +16,12 @@ public enum ReadingZone
     ExamPreparation // 四六级真题备考区
 }
 
+public enum ReadingLayoutMode
+{
+    ContinuousParagraph, // 连贯自然段落沉浸阅读 (整段展示不单句分行)
+    SentenceBySentence   // 逐句对照卡片模式
+}
+
 public partial class MainViewModel : ObservableObject
 {
     private readonly AppConfigService _configService;
@@ -26,6 +32,9 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private ReadingZone _currentZone = ReadingZone.ExamPreparation;
+
+    [ObservableProperty]
+    private ReadingLayoutMode _layoutMode = ReadingLayoutMode.ContinuousParagraph;
 
     [ObservableProperty]
     private ObservableCollection<GitHubExamPaperItem> _examPapers = [];
@@ -89,6 +98,14 @@ public partial class MainViewModel : ObservableObject
     public void SwitchZone(ReadingZone zone)
     {
         CurrentZone = zone;
+    }
+
+    [RelayCommand]
+    public void ToggleLayoutMode()
+    {
+        LayoutMode = LayoutMode == ReadingLayoutMode.ContinuousParagraph 
+            ? ReadingLayoutMode.SentenceBySentence 
+            : ReadingLayoutMode.ContinuousParagraph;
     }
 
     [RelayCommand]

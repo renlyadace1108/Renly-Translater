@@ -81,4 +81,16 @@ public class BilingualParagraph
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public int ParagraphIndex { get; set; }
     public List<BilingualSentencePair> Sentences { get; set; } = [];
+
+    // 整个段落的连贯英文文本 (自然段排版，不单句换行)
+    public string FullEnglishParagraph => 
+        string.Join(" ", Sentences.Select(s => s.EnglishSentence.Trim()));
+
+    // 段落对应的所有单词 Token (流式高亮展示)
+    public List<WordToken> Tokens => 
+        Sentences.SelectMany(s => s.Tokens).ToList();
+
+    // 整个段落的参考译文组合
+    public string FullChineseTranslation => 
+        string.Join(" ", Sentences.Where(s => !string.IsNullOrWhiteSpace(s.ChineseTranslation)).Select(s => s.ChineseTranslation.Trim()));
 }

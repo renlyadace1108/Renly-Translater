@@ -32,6 +32,8 @@
                     </Border>
 
                     <!-- 统一风格的极简功能操作按钮 -->
+                    <Button Content="📖 排版: 连贯自然段" Command="{Binding ToggleLayoutModeCommand}" Margin="0,0,8,0"
+                            ToolTip="在「连贯自然段落流式阅读」与「逐句卡片对照」之间无缝切换"/>
                     <Button Content="导入文档 (PDF/MD)" Click="OnImportArticleClick" Margin="0,0,8,0"/>
                     <Button Content="全篇对照翻译" Command="{Binding TranslateAllSentencesCommand}" Margin="0,0,8,0"/>
                     <Button Content="生词本" Click="OnOpenNotebookClick" Margin="0,0,8,0"/>
@@ -134,98 +136,212 @@
                 </Grid>
             </Border>
 
-            <!-- 双语对照阅读区 (采用 UI 虚拟化 VirtualizingStackPanel 渲染，内存暴降 90%，丝滑流畅无卡顿) -->
-            <ListBox Grid.Column="1" ItemsSource="{Binding FlatSentences}" SelectedItem="{Binding SelectedSentence}"
-                     Background="Transparent" BorderThickness="0"
-                     ScrollViewer.VerticalScrollBarVisibility="Hidden"
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                     VirtualizingStackPanel.IsVirtualizing="True"
-                     VirtualizingStackPanel.VirtualizationMode="Recycling"
-                     ScrollViewer.CanContentScroll="True">
-                <ListBox.ItemContainerStyle>
-                    <Style TargetType="ListBoxItem">
-                        <Setter Property="Padding" Value="0" />
-                        <Setter Property="Margin" Value="28,6" />
-                        <Setter Property="Background" Value="Transparent" />
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="ListBoxItem">
-                                    <ContentPresenter />
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </ListBox.ItemContainerStyle>
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <!-- 单句双语对照卡片 (点击即选定，支持平滑局部响应) -->
-                        <Border Padding="16,14" Background="{StaticResource CardBackgroundBrush}" 
-                                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Cursor="Hand"
-                                MouseLeftButtonDown="OnSentenceClick">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="24" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
+            <!-- 中央主阅读区：包含两种排版视图 -->
+            <Grid Grid.Column="1">
+                <!-- 视图 1：连贯自然段落沉浸阅读 (整段展示不生硬分行，段落内单词流式排版，点击任意句子即可高亮精读) -->
+                <ListBox ItemsSource="{Binding Paragraphs}"
+                         Background="Transparent" BorderThickness="0"
+                         ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         VirtualizingStackPanel.IsVirtualizing="True"
+                         VirtualizingStackPanel.VirtualizationMode="Recycling"
+                         ScrollViewer.CanContentScroll="True"
+                         Visibility="{Binding LayoutMode, Converter={x:Static local:EnumEqualsToVisibilityConverter.Instance}, ConverterParameter=ContinuousParagraph}">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="28,8" />
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <ContentPresenter />
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <!-- 连贯自然段落卡片 -->
+                            <Border Padding="20,16" Background="{StaticResource CardBackgroundBrush}" 
+                                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8">
+                                <StackPanel>
+                                    <!-- 英文段落：按句子组合流式排版，不单句换行！ -->
+                                    <ItemsControl ItemsSource="{Binding Sentences}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel Orientation="Horizontal" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <!-- 单个句子：点击即可选中进行长难句精读分析 -->
+                                                <Border Margin="0,0,6,4" Padding="2,2" CornerRadius="4" Cursor="Hand"
+                                                        MouseLeftButtonDown="OnSentenceClick"
+                                                        ToolTip="点击此句在右侧进行长难句学术精读分析">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Background" Value="Transparent" />
+                                                            <Style.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter Property="Background" Value="#252A36" />
+                                                                </Trigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <!-- 句子内的单词流式高亮 -->
+                                                    <ItemsControl ItemsSource="{Binding Tokens}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <WrapPanel Orientation="Horizontal" />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <TextBlock Text="{Binding RawText}" FontSize="15" LineHeight="26">
+                                                                    <TextBlock.Style>
+                                                                        <Style TargetType="TextBlock">
+                                                                            <Setter Property="Foreground" Value="#E2E5EB" />
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding HasExamHighlight}" Value="True">
+                                                                                    <Setter Property="Foreground" Value="{Binding DictInfo.ColorHex}" />
+                                                                                    <Setter Property="FontWeight" Value="Medium" />
+                                                                                    <Setter Property="TextDecorations" Value="Underline" />
+                                                                                    <Setter Property="Cursor" Value="Help" />
+                                                                                    <Setter Property="ToolTip">
+                                                                                        <Setter.Value>
+                                                                                            <Border Background="#1E2025" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12" MaxWidth="320">
+                                                                                                <StackPanel>
+                                                                                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                                                                                        <TextBlock Text="{Binding DictInfo.Word}" FontWeight="Bold" FontSize="15" Foreground="#FFFFFF"/>
+                                                                                                        <TextBlock Text="{Binding DictInfo.Phonetic, StringFormat=' [{0}]'}" Foreground="{StaticResource TextSecondaryBrush}" Margin="6,2,0,0" FontSize="12"/>
+                                                                                                        <Border Background="#2C2F36" CornerRadius="3" Padding="5,1" Margin="8,0,0,0">
+                                                                                                            <TextBlock Text="{Binding DictInfo.PrimaryLevelName}" FontSize="10.5" Foreground="{Binding DictInfo.ColorHex}" FontWeight="Bold"/>
+                                                                                                        </Border>
+                                                                                                    </StackPanel>
+                                                                                                    <TextBlock Text="{Binding DictInfo.DisplayTranslation}" TextWrapping="Wrap" Margin="0,4,0,8" Foreground="#D1D5DB" FontSize="13" LineHeight="19"/>
+                                                                                                    <Button Content="★ 收藏至生词本" Padding="8,4" FontSize="11" HorizontalAlignment="Right"
+                                                                                                            Command="{Binding DataContext.AddWordToNotebookCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                                                            CommandParameter="{Binding}" />
+                                                                                                </StackPanel>
+                                                                                            </Border>
+                                                                                        </Setter.Value>
+                                                                                    </Setter>
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </TextBlock.Style>
+                                                                </TextBlock>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
 
-                                <!-- 英文原句 (流式排版单词与高亮) -->
-                                <ItemsControl Grid.Column="0" ItemsSource="{Binding Tokens}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <WrapPanel Orientation="Horizontal" />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding RawText}" FontSize="15" LineHeight="26">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock">
-                                                        <Setter Property="Foreground" Value="#E2E5EB" />
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding HasExamHighlight}" Value="True">
-                                                                <Setter Property="Foreground" Value="{Binding DictInfo.ColorHex}" />
-                                                                <Setter Property="FontWeight" Value="Medium" />
-                                                                <Setter Property="TextDecorations" Value="Underline" />
-                                                                <Setter Property="Cursor" Value="Help" />
-                                                                <!-- 仅在考纲高亮单词上挂载 ToolTip，大幅减少 ToolTip 实例化内存开销 -->
-                                                                <Setter Property="ToolTip">
-                                                                    <Setter.Value>
-                                                                        <Border Background="#1E2025" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12" MaxWidth="320">
-                                                                            <StackPanel>
-                                                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                                                                                    <TextBlock Text="{Binding DictInfo.Word}" FontWeight="Bold" FontSize="15" Foreground="#FFFFFF"/>
-                                                                                    <TextBlock Text="{Binding DictInfo.Phonetic, StringFormat=' [{0}]'}" Foreground="{StaticResource TextSecondaryBrush}" Margin="6,2,0,0" FontSize="12"/>
-                                                                                    <Border Background="#2C2F36" CornerRadius="3" Padding="5,1" Margin="8,0,0,0">
-                                                                                        <TextBlock Text="{Binding DictInfo.PrimaryLevelName}" FontSize="10.5" Foreground="{Binding DictInfo.ColorHex}" FontWeight="Bold"/>
-                                                                                    </Border>
+                                    <!-- 段落参考译文（若已翻译，显示在段落下部，支持优雅收缩） -->
+                                    <Border Margin="0,10,0,0" Padding="10,8" Background="#16181D" CornerRadius="5"
+                                            Visibility="{Binding FullChineseTranslation, Converter={x:Static local:StringToVisibilityConverter.Instance}}">
+                                        <TextBlock Text="{Binding FullChineseTranslation}" Foreground="{StaticResource TextSecondaryBrush}" 
+                                                   FontSize="13.5" LineHeight="23" TextWrapping="Wrap" />
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <!-- 视图 2：逐句对照卡片模式 (方便习惯单句对照精读的用户) -->
+                <ListBox ItemsSource="{Binding FlatSentences}" SelectedItem="{Binding SelectedSentence}"
+                         Background="Transparent" BorderThickness="0"
+                         ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         VirtualizingStackPanel.IsVirtualizing="True"
+                         VirtualizingStackPanel.VirtualizationMode="Recycling"
+                         ScrollViewer.CanContentScroll="True"
+                         Visibility="{Binding LayoutMode, Converter={x:Static local:EnumEqualsToVisibilityConverter.Instance}, ConverterParameter=SentenceBySentence}">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="28,6" />
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <ContentPresenter />
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border Padding="16,14" Background="{StaticResource CardBackgroundBrush}" 
+                                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Cursor="Hand"
+                                    MouseLeftButtonDown="OnSentenceClick">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="24" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- 英文原句 -->
+                                    <ItemsControl Grid.Column="0" ItemsSource="{Binding Tokens}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel Orientation="Horizontal" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding RawText}" FontSize="15" LineHeight="26">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="#E2E5EB" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding HasExamHighlight}" Value="True">
+                                                                    <Setter Property="Foreground" Value="{Binding DictInfo.ColorHex}" />
+                                                                    <Setter Property="FontWeight" Value="Medium" />
+                                                                    <Setter Property="TextDecorations" Value="Underline" />
+                                                                    <Setter Property="Cursor" Value="Help" />
+                                                                    <Setter Property="ToolTip">
+                                                                        <Setter.Value>
+                                                                            <Border Background="#1E2025" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12" MaxWidth="320">
+                                                                                <StackPanel>
+                                                                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                                                                        <TextBlock Text="{Binding DictInfo.Word}" FontWeight="Bold" FontSize="15" Foreground="#FFFFFF"/>
+                                                                                        <TextBlock Text="{Binding DictInfo.Phonetic, StringFormat=' [{0}]'}" Foreground="{StaticResource TextSecondaryBrush}" Margin="6,2,0,0" FontSize="12"/>
+                                                                                        <Border Background="#2C2F36" CornerRadius="3" Padding="5,1" Margin="8,0,0,0">
+                                                                                            <TextBlock Text="{Binding DictInfo.PrimaryLevelName}" FontSize="10.5" Foreground="{Binding DictInfo.ColorHex}" FontWeight="Bold"/>
+                                                                                        </Border>
+                                                                                    </StackPanel>
+                                                                                    <TextBlock Text="{Binding DictInfo.DisplayTranslation}" TextWrapping="Wrap" Margin="0,4,0,8" Foreground="#D1D5DB" FontSize="13" LineHeight="19"/>
+                                                                                    <Button Content="★ 收藏至生词本" Padding="8,4" FontSize="11" HorizontalAlignment="Right"
+                                                                                            Command="{Binding DataContext.AddWordToNotebookCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                                            CommandParameter="{Binding}" />
                                                                                 </StackPanel>
-                                                                                <TextBlock Text="{Binding DictInfo.DisplayTranslation}" TextWrapping="Wrap" Margin="0,4,0,8" Foreground="#D1D5DB" FontSize="13" LineHeight="19"/>
-                                                                                <Button Content="★ 收藏至生词本" Padding="8,4" FontSize="11" HorizontalAlignment="Right"
-                                                                                        Command="{Binding DataContext.AddWordToNotebookCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                                                        CommandParameter="{Binding}" />
-                                                                            </StackPanel>
-                                                                        </Border>
-                                                                    </Setter.Value>
-                                                                </Setter>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                            </TextBlock>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                                                                            </Border>
+                                                                        </Setter.Value>
+                                                                    </Setter>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
 
-                                <!-- 右侧参考译文 (弱化对比度，学术阅读感) -->
-                                <TextBlock Grid.Column="2" Text="{Binding ChineseTranslation}" 
-                                           Foreground="{StaticResource TextSecondaryBrush}" FontSize="14" LineHeight="25" TextWrapping="Wrap"/>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-
+                                    <!-- 右侧参考译文 -->
+                                    <TextBlock Grid.Column="2" Text="{Binding ChineseTranslation}" 
+                                               Foreground="{StaticResource TextSecondaryBrush}" FontSize="14" LineHeight="25" TextWrapping="Wrap"/>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
             <!-- 细致分割线 -->
             <GridSplitter Grid.Column="2" HorizontalAlignment="Stretch" Background="{StaticResource BorderBrush}"/>
 
