@@ -16,9 +16,14 @@
         <!-- 顶部精简导航栏 (去掉繁琐Logo，采用高质感扁平标签设计) -->
         <Border Grid.Row="0" Background="{StaticResource PanelBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
             <DockPanel Margin="16,0">
-                <!-- 左侧工作专区胶囊切换器 -->
+                <!-- 左侧工作专区胶囊切换器与高分辨率彩色Logo -->
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Background="#121316" CornerRadius="6" Padding="2" Margin="0,0,24,0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,18,0">
+                        <Image Source="pack://application:,,,/Assets/app.png" Width="26" Height="26" Margin="0,0,8,0" RenderOptions.BitmapScalingMode="HighQuality"/>
+                        <TextBlock Text="Renly Translater" Foreground="{StaticResource TextPrimaryBrush}" FontWeight="Bold" FontSize="14.5" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <Border Background="#121316" CornerRadius="6" Padding="2" Margin="0,0,20,0" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
                         <StackPanel Orientation="Horizontal">
                             <RadioButton Content="四六级备考" GroupName="ZoneGroup" IsChecked="True"
                                          Click="OnExamZoneClick"
@@ -367,28 +372,71 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- 主干结构拆解卡片 -->
+                        <!-- 主干结构拆解卡片 (带彩色背景区分主谓宾修饰成分，支持直接点击查词) -->
                         <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,14">
                             <StackPanel>
-                                <TextBlock Text="核心主干 (S-V-O)" FontWeight="SemiBold" Foreground="#81A1C1" Margin="0,0,0,8" FontSize="13"/>
-                                <TextBlock Text="{Binding CurrentAnalysis.Core.Subject, StringFormat='主语 (S): {0}'}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4" FontSize="12.5"/>
-                                <TextBlock Text="{Binding CurrentAnalysis.Core.Predicate, StringFormat='谓语 (V): {0}'}" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,4" FontSize="12.5"/>
-                                <TextBlock Text="{Binding CurrentAnalysis.Core.ObjectOrComplement, StringFormat='宾/表语 (O): {0}'}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12.5"/>
+                                <TextBlock Text="核心主干结构 (S-V-O-M)" FontWeight="SemiBold" Foreground="#81A1C1" Margin="0,0,0,10" FontSize="13"/>
+                                
+                                <!-- 主语 (S) - 典雅蓝灰色背景 -->
+                                <Border Background="#1A2736" BorderBrush="#2D435E" BorderThickness="1" CornerRadius="4" Padding="10,7" Margin="0,0,0,8"
+                                        Visibility="{Binding CurrentAnalysis.Core.Subject, Converter={x:Static local:StringToVisibilityConverter.Instance}}">
+                                    <StackPanel>
+                                        <TextBlock Text="主语 (Subject)" Foreground="#61AFEF" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding CurrentAnalysis.Core.Subject}" Foreground="#ECEEF2" FontSize="13" FontWeight="Medium" TextWrapping="Wrap" Cursor="Hand"
+                                                   ToolTip="点击此片段单词可查询词典释义"
+                                                   PreviewMouseLeftButtonUp="OnAnalysisSnippetMouseUp"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- 谓语 (V) - 浅赤金黄背景 -->
+                                <Border Background="#2B2416" BorderBrush="#59461F" BorderThickness="1" CornerRadius="4" Padding="10,7" Margin="0,0,0,8"
+                                        Visibility="{Binding CurrentAnalysis.Core.Predicate, Converter={x:Static local:StringToVisibilityConverter.Instance}}">
+                                    <StackPanel>
+                                        <TextBlock Text="谓语动词 (Predicate)" Foreground="#E5C07B" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding CurrentAnalysis.Core.Predicate}" Foreground="#ECEEF2" FontSize="13" FontWeight="Medium" TextWrapping="Wrap" Cursor="Hand"
+                                                   ToolTip="点击此片段单词可查询词典释义"
+                                                   PreviewMouseLeftButtonUp="OnAnalysisSnippetMouseUp"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- 宾语/表语 (O/C) - 翡翠翠绿背景 -->
+                                <Border Background="#162720" BorderBrush="#244E3D" BorderThickness="1" CornerRadius="4" Padding="10,7" Margin="0,0,0,8"
+                                        Visibility="{Binding CurrentAnalysis.Core.ObjectOrComplement, Converter={x:Static local:StringToVisibilityConverter.Instance}}">
+                                    <StackPanel>
+                                        <TextBlock Text="宾语 / 表语 / 补足语 (Object / Complement)" Foreground="#98C379" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding CurrentAnalysis.Core.ObjectOrComplement}" Foreground="#ECEEF2" FontSize="13" TextWrapping="Wrap" Cursor="Hand"
+                                                   ToolTip="点击此片段单词可查询词典释义"
+                                                   PreviewMouseLeftButtonUp="OnAnalysisSnippetMouseUp"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- 状语/引导/前置修饰 (Adv/Mod) - 紫粉色背景 -->
+                                <Border Background="#261A29" BorderBrush="#4E2B56" BorderThickness="1" CornerRadius="4" Padding="10,7"
+                                        Visibility="{Binding CurrentAnalysis.Core.AdverbialOrModifier, Converter={x:Static local:StringToVisibilityConverter.Instance}}">
+                                    <StackPanel>
+                                        <TextBlock Text="状语 / 引导修饰 (Modifier / Adverbial)" Foreground="#C678DD" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding CurrentAnalysis.Core.AdverbialOrModifier}" Foreground="#ECEEF2" FontSize="13" TextWrapping="Wrap" Cursor="Hand"
+                                                   ToolTip="点击此片段单词可查询词典释义"
+                                                   PreviewMouseLeftButtonUp="OnAnalysisSnippetMouseUp"/>
+                                    </StackPanel>
+                                </Border>
                             </StackPanel>
                         </Border>
 
-                        <!-- 从句分析卡片 -->
+                        <!-- 从句与语法特征 (带柔和琥珀/洋红背景卡片) -->
                         <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,14">
                             <StackPanel>
-                                <TextBlock Text="从句与语法特征" FontWeight="SemiBold" Foreground="#8FBCBB" Margin="0,0,0,8" FontSize="13"/>
+                                <TextBlock Text="从句与语法特征" FontWeight="SemiBold" Foreground="#8FBCBB" Margin="0,0,0,10" FontSize="13"/>
                                 <ItemsControl ItemsSource="{Binding CurrentAnalysis.Clauses}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,6" Margin="0,0,0,4">
+                                            <Border Background="#201C24" BorderBrush="#403248" BorderThickness="1" CornerRadius="5" Padding="10,8" Margin="0,0,0,8">
                                                 <StackPanel>
-                                                    <TextBlock Text="{Binding Type}" FontWeight="Medium" Foreground="#D08770" FontSize="12.5"/>
-                                                    <TextBlock Text="{Binding ClauseContent}" FontStyle="Italic" Foreground="#C0C5CE" TextWrapping="Wrap" Margin="0,2,0,4" FontSize="12"/>
-                                                    <TextBlock Text="{Binding Explanation}" TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" LineHeight="17"/>
+                                                    <TextBlock Text="{Binding Type}" FontWeight="SemiBold" Foreground="#E06C75" FontSize="12.5" Margin="0,0,0,4"/>
+                                                    <TextBlock Text="{Binding ClauseContent}" FontStyle="Italic" Foreground="#D19A66" TextWrapping="Wrap" Margin="0,0,0,6" FontSize="12.5" Cursor="Hand"
+                                                               ToolTip="点击从句文本中单词查词"
+                                                               PreviewMouseLeftButtonUp="OnAnalysisSnippetMouseUp"/>
+                                                    <TextBlock Text="{Binding Explanation}" TextWrapping="Wrap" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" LineHeight="18"/>
                                                 </StackPanel>
                                             </Border>
                                         </DataTemplate>
@@ -397,20 +445,75 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- 考点与同义替换 -->
-                        <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14">
+                        <!-- 考点精讲与解题陷阱 (带暗蓝底色) -->
+                        <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,14"
+                                Visibility="{Binding CurrentAnalysis.ExamFocusNotes.Count, Converter={x:Static local:BooleanToVisibilityConverter.Instance}}">
                             <StackPanel>
-                                <TextBlock Text="重点词汇与同义替换" FontWeight="SemiBold" Foreground="#BF616A" Margin="0,0,0,8" FontSize="13"/>
-                                <ItemsControl ItemsSource="{Binding CurrentAnalysis.KeyVocabularies}">
+                                <TextBlock Text="真题考点与理解陷阱" FontWeight="SemiBold" Foreground="#56B6C2" Margin="0,0,0,8" FontSize="13"/>
+                                <ItemsControl ItemsSource="{Binding CurrentAnalysis.ExamFocusNotes}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" Margin="0,3">
-                                                <TextBlock Text="{Binding Word}" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,8,0" FontSize="12.5"/>
-                                                <TextBlock Text="{Binding SynonymSubstitutions, Converter={x:Static local:ListJoinConverter.Instance}, StringFormat='(同义: {0})'}" Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"/>
-                                            </StackPanel>
+                                            <Border Background="#172228" BorderBrush="#253A44" BorderThickness="1" CornerRadius="4" Padding="9,6" Margin="0,0,0,6">
+                                                <TextBlock Text="{Binding}" Foreground="{StaticResource TextPrimaryBrush}" FontSize="12" LineHeight="18" TextWrapping="Wrap"/>
+                                            </Border>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 重点词汇与同义替换 (可直接点击一键查词与收藏) -->
+                        <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,14">
+                            <StackPanel>
+                                <TextBlock Text="重点词汇与同义替换 (点击查词)" FontWeight="SemiBold" Foreground="#BF616A" Margin="0,0,0,8" FontSize="13"/>
+                                <ItemsControl ItemsSource="{Binding CurrentAnalysis.KeyVocabularies}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#1C1E24" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8,6" Margin="0,0,0,6" Cursor="Hand"
+                                                    MouseLeftButtonDown="OnVocabSnippetClick">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Grid.Column="0">
+                                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                                                            <TextBlock Text="{Binding Word}" FontWeight="Bold" Foreground="#61AFEF" FontSize="13" Margin="0,0,8,0"/>
+                                                            <Border Background="#2C2F36" CornerRadius="3" Padding="5,1">
+                                                                <TextBlock Text="{Binding ExamLevel}" FontSize="10.5" Foreground="#E5C07B" FontWeight="SemiBold"/>
+                                                            </Border>
+                                                        </StackPanel>
+                                                        <TextBlock Text="{Binding SynonymSubstitutions, Converter={x:Static local:ListJoinConverter.Instance}, StringFormat='同义替换: {0}'}" 
+                                                                   Foreground="{StaticResource TextSecondaryBrush}" FontSize="11.5" TextWrapping="Wrap"/>
+                                                    </StackPanel>
+                                                    <Button Grid.Column="1" Content="🔍 查释义" Padding="7,3" FontSize="11" VerticalAlignment="Center"
+                                                            Command="{Binding DataContext.LookupWordCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding Word}"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 单点词汇即时查询结果浮窗卡片 (当在右侧点击查词时展开展示) -->
+                        <Border Background="#1A1C22" BorderBrush="#3B4252" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,10"
+                                Visibility="{Binding QuickLookupResult, Converter={x:Static local:StringToVisibilityConverter.Instance}}">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                    <TextBlock Text="📖 词汇即时释义" FontWeight="SemiBold" Foreground="#98C379" FontSize="12.5"/>
+                                    <Border Background="#252A34" CornerRadius="3" Padding="5,1" Margin="8,0,0,0">
+                                        <TextBlock Text="{Binding QuickLookupResult.PrimaryLevelName}" FontSize="10.5" Foreground="{Binding QuickLookupResult.ColorHex}" FontWeight="Bold"/>
+                                    </Border>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                    <TextBlock Text="{Binding QuickLookupResult.Word}" FontWeight="Bold" FontSize="15" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="{Binding QuickLookupResult.Phonetic, StringFormat=' [{0}]'}" Foreground="{StaticResource TextSecondaryBrush}" Margin="8,2,0,0" FontSize="12.5"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding QuickLookupResult.DisplayTranslation}" TextWrapping="Wrap" Foreground="#D1D5DB" FontSize="13" LineHeight="20" Margin="0,4,0,10"/>
+                                <Button Content="★ 收藏到生词本" HorizontalAlignment="Left" Padding="10,4" FontSize="11.5"
+                                        Command="{Binding AddQuickLookupToNotebookCommand}"/>
                             </StackPanel>
                         </Border>
                     </StackPanel>

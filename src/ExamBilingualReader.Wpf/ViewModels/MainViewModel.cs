@@ -67,6 +67,13 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private SentenceAnalysisResult? _currentAnalysis;
 
+    // 侧边栏词汇即时查询结果
+    [ObservableProperty]
+    private EcdictEntry? _quickLookupResult;
+
+    [ObservableProperty]
+    private string _quickLookupWord = string.Empty;
+
     // 当前活跃 LLM 配置
     [ObservableProperty]
     private LlmProviderConfig? _currentProvider;
@@ -274,6 +281,54 @@ public partial class MainViewModel : ObservableObject
         var success = await _dictionaryRepo.AddToNotebookAsync(entry);
         StatusMessage = success 
             ? $"已将单词 [{token.DictInfo.Word}] 收藏至生词本！" 
+            : $"收藏失败。";
+    }
+
+    [RelayCommand]
+    public async Task LookupWordAsync(string? rawWord)
+    {
+        if (string.IsNullOrWhiteSpace(rawWord)) return;
+
+        var clean = SentenceSplitter.NormalizeWord(rawWord);
+        if (string.IsNullOrWhiteSpace(clean)) return;
+
+        QuickLookupWord = clean;
+        var entry = await _dictionaryRepo.FindWordAsync(clean);
+        if (entry != null)
+        {
+            QuickLookupResult = entry;
+            StatusMessage = $"查词成功: [{entry.Word}] {entry.PrimaryLevelName}";
+        }
+        else
+        {
+            QuickLookupResult = new EcdictEntry
+            {
+                Word = clean,
+                Translation = "本地词典暂未收录该单词详细条目"
+            };
+            StatusMessage = $"未在本地词库中找到 [{clean}]";
+        }
+    }
+
+    [RelayCommand]
+    public async Task AddQuickLookupToNotebookAsync()
+    {
+        if (QuickLookupResult == null || string.IsNullOrWhiteSpace(QuickLookupResult.Word)) return;
+
+        var entry = new VocabularyNotebookEntry
+        {
+            Word = QuickLookupResult.Word,
+            Phonetic = QuickLookupResult.Phonetic,
+            Translation = QuickLookupResult.DisplayTranslation,
+            LevelTag = QuickLookupResult.PrimaryLevelName,
+            ContextSentence = SelectedSentence?.EnglishSentence ?? string.Empty,
+            ContextTranslation = SelectedSentence?.ChineseTranslation ?? string.Empty,
+            AddedAt = DateTime.Now
+        };
+
+        var success = await _dictionaryRepo.AddToNotebookAsync(entry);
+        StatusMessage = success 
+            ? $"已将单词 [{QuickLookupResult.Word}] 收藏至生词本！" 
             : $"收藏失败。";
     }
 

@@ -30,6 +30,9 @@ public class CoreStructure
 
     [JsonPropertyName("object_or_complement")]
     public string ObjectOrComplement { get; set; } = string.Empty;
+
+    [JsonPropertyName("adverbial_or_modifier")]
+    public string AdverbialOrModifier { get; set; } = string.Empty;
 }
 
 public class ClauseItem

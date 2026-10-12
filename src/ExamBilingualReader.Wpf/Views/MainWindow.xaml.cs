@@ -85,4 +85,52 @@ public partial class MainWindow : Window
             }
         }
     }
+
+    private async void OnAnalysisSnippetMouseUp(object sender, MouseButtonEventArgs e)
+    {
+        if (DataContext is not MainViewModel vm) return;
+        if (sender is not System.Windows.Controls.TextBlock tb) return;
+
+        // 获取用户选中或点击位置的词
+        var text = tb.Text;
+        if (string.IsNullOrWhiteSpace(text)) return;
+
+        // 如果用户有高亮框选文本，以框选文本优先
+        var targetWord = string.Empty;
+        var p = e.GetPosition(tb);
+        // 按空格简单拆词，寻找最近的单词
+        var words = text.Split([' ', ',', '.', ';', ':', '!', '?', '(', ')', '"', '\''], StringSplitOptions.RemoveEmptyEntries);
+        if (words.Length > 0)
+        {
+            // 如果仅有一个词或简短词汇，直接查询
+            targetWord = words[0];
+            // 若用户点击了特定词，尝试更精确的字符命中
+            var charIndex = (int)(p.X / (tb.FontSize * 0.55));
+            if (charIndex >= 0 && charIndex < text.Length)
+            {
+                int start = charIndex;
+                while (start > 0 && char.IsLetter(text[start - 1])) start--;
+                int end = charIndex;
+                while (end < text.Length && char.IsLetter(text[end])) end++;
+                if (end > start)
+                {
+                    targetWord = text[start..end];
+                }
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(targetWord))
+        {
+            await vm.LookupWordCommand.ExecuteAsync(targetWord);
+        }
+    }
+
+    private async void OnVocabSnippetClick(object sender, MouseButtonEventArgs e)
+    {
+        if (DataContext is not MainViewModel vm) return;
+        if (sender is FrameworkElement fe && fe.DataContext is KeyVocabularyItem vocab)
+        {
+            await vm.LookupWordCommand.ExecuteAsync(vocab.Word);
+        }
+    }
 }
