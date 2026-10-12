@@ -12,13 +12,37 @@
         </Grid.RowDefinitions>
 
         <DockPanel Margin="0,0,0,10">
-            <TextBlock Text="粘贴或载入英文真题 / 外刊原文 / PDF 文档" FontSize="16" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+            <TextBlock Text="导入真题 / 外刊文档 (支持 PDF, Markdown, TXT, HTML)" FontSize="15" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="打开文件 (PDF / TXT)" Click="OnOpenFileClick" Background="#EA580C" Margin="0,0,8,0"/>
-                <Button Content="载入雅思真题示例" Click="OnLoadSampleIeltsClick" Background="#4F46E5" Margin="0,0,8,0"/>
-                <Button Content="载入四六级示例" Click="OnLoadSampleCetClick" Background="#2563EB"/>
+                <Button Content="📁 本地文件 (PDF/MD/TXT)" Click="OnOpenFileClick" Background="#EA580C" Margin="0,0,8,0"/>
+                <Button Content="🌐 从 GitHub 在线拉取真题" Click="OnFetchGitHubPapersClick" Background="#0284C7" Margin="0,0,8,0"/>
+                <Button Content="雅思示例" Click="OnLoadSampleIeltsClick" Background="#4F46E5" Margin="0,0,8,0"/>
+                <Button Content="四六级示例" Click="OnLoadSampleCetClick" Background="#2563EB"/>
             </StackPanel>
         </DockPanel>
+
+        <!-- GitHub 真题在线选择卡片 (默认折叠) -->
+        <Border x:Name="PnlGitHub" Visibility="Collapsed" Background="#1E293B" CornerRadius="6" Padding="10" Margin="0,0,0,10">
+            <StackPanel>
+                <DockPanel Margin="0,0,0,6">
+                    <TextBlock Text="GitHub 开源真题库 (持续更新中):" FontWeight="SemiBold" Foreground="#38BDF8"/>
+                    <Button Content="关闭" Click="OnCloseGitHubPanelClick" Background="#475569" Padding="8,2" FontSize="11" HorizontalAlignment="Right"/>
+                </DockPanel>
+                <ListBox x:Name="LstGitHubPapers" Height="130" Background="#0F172A" BorderBrush="#334155"
+                         SelectionChanged="OnGitHubPaperSelected">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <DockPanel Margin="4,2">
+                                <Border Background="#0284C7" CornerRadius="3" Padding="4,1" Margin="0,0,8,0">
+                                    <TextBlock Text="{Binding Category}" FontSize="10" Foreground="White" FontWeight="Bold"/>
+                                </Border>
+                                <TextBlock Text="{Binding Title}" Foreground="White" FontSize="13"/>
+                            </DockPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+        </Border>
 
         <TextBox x:Name="TxtArticle" Grid.Row="1" TextWrapping="Wrap" AcceptsReturn="True" 
                  VerticalScrollBarVisibility="Auto" FontSize="14" LineHeight="22"

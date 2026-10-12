@@ -18,25 +18,56 @@ public partial class ImportArticleWindow : Window
     {
         var ofd = new OpenFileDialog
         {
-            Filter = "文档文件 (*.pdf;*.txt)|*.pdf;*.txt|PDF 文件 (*.pdf)|*.pdf|文本文件 (*.txt)|*.txt|所有文件 (*.*)|*.*"
+            Filter = "所有支持的文档 (*.pdf;*.md;*.txt;*.html)|*.pdf;*.md;*.txt;*.html|PDF 文件 (*.pdf)|*.pdf|Markdown 文件 (*.md;*.markdown)|*.md;*.markdown|纯文本文件 (*.txt)|*.txt|所有文件 (*.*)|*.*"
         };
         if (ofd.ShowDialog() == true)
         {
             try
             {
-                var ext = Path.GetExtension(ofd.FileName).ToLowerInvariant();
-                if (ext == ".pdf")
-                {
-                    TxtArticle.Text = ExamBilingualReader.Core.TextProcessing.PdfExtractor.ExtractText(ofd.FileName);
-                }
-                else
-                {
-                    TxtArticle.Text = File.ReadAllText(ofd.FileName);
-                }
+                TxtArticle.Text = ExamBilingualReader.Core.TextProcessing.DocumentTextExtractor.ExtractFromFile(ofd.FileName);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"读取文件失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+    }
+
+    private async void OnFetchGitHubPapersClick(object sender, RoutedEventArgs e)
+    {
+        PnlGitHub.Visibility = Visibility.Visible;
+        var examHub = App.Services.GetRequiredService<ExamBilingualReader.Infrastructure.Services.IExamHubService>();
+        try
+        {
+            var papers = await examHub.FetchLatestExamPapersAsync();
+            LstGitHubPapers.ItemsSource = papers;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"获取真题列表失败: {ex.Message}", "网络提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void OnCloseGitHubPanelClick(object sender, RoutedEventArgs e)
+    {
+        PnlGitHub.Visibility = Visibility.Collapsed;
+    }
+
+    private async void OnGitHubPaperSelected(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (LstGitHubPapers.SelectedItem is ExamBilingualReader.Core.Models.ExamHub.GitHubExamPaperItem paper)
+        {
+            var examHub = App.Services.GetRequiredService<ExamBilingualReader.Infrastructure.Services.IExamHubService>();
+            try
+            {
+                TxtArticle.Text = "正在从 GitHub 下载真题内容，请稍候...";
+                var content = await examHub.DownloadPaperContentAsync(paper.DownloadUrl);
+                TxtArticle.Text = content;
+                PnlGitHub.Visibility = Visibility.Collapsed;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"下载真题内容失败: {ex.Message}", "网络错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

@@ -20,6 +20,7 @@ public partial class App : Application
         services.AddSingleton<IDictionaryRepository, SqliteDictionaryRepository>();
         services.AddSingleton<IOpenAiClient, OpenAiCompatibleClient>();
         services.AddSingleton<IArticleProcessingService, ArticleProcessingService>();
+        services.AddSingleton<IExamHubService, GitHubExamHubService>();
 
         // 注册 ViewModels
         services.AddTransient<MainViewModel>();
