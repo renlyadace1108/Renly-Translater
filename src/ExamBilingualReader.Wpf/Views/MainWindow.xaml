@@ -47,6 +47,7 @@
                     <Button Content="导入文档 (PDF/MD)" Click="OnImportArticleClick" Margin="0,0,8,0"/>
                     <Button Content="全篇对照翻译" Command="{Binding TranslateAllSentencesCommand}" Margin="0,0,8,0"/>
                     <Button Content="生词本" Click="OnOpenNotebookClick" Margin="0,0,8,0"/>
+                    <Button Content="🎨 排版外观" Click="OnOpenStyleSettingsClick" Margin="0,0,8,0" ToolTip="自定义阅读字体、字号、粗细及页面背景颜色"/>
                     <Button Content="模型设置" Click="OnOpenSettingsClick"/>
                 </StackPanel>
                 
@@ -151,35 +152,37 @@
                 </Grid>
             </Border>
 
-            <!-- 中央主阅读区：包含三种排版视图 -->
-            <Grid Grid.Column="1">
+            <!-- 中央主阅读区：包含三种排版视图 (背景支持自定义) -->
+            <Grid Grid.Column="1" Background="{Binding ReaderStyle.ReadingBackground, Converter={x:Static local:HexToBrushConverter.Instance}}">
                 <!-- 视图 0：原文整块连贯沉浸展示 (全文连贯完整呈现，支持按住鼠标左键任意自由拖选长句/短语，松开后右侧自动同步并可一键 AI 精读拆解) -->
                 <ScrollViewer VerticalScrollBarVisibility="Hidden"
                               HorizontalScrollBarVisibility="Disabled"
                               Visibility="{Binding LayoutMode, Converter={x:Static local:EnumEqualsToVisibilityConverter.Instance}, ConverterParameter=FullArticleContinuous}">
-                    <Border Margin="28,14" Padding="26,22" Background="{StaticResource CardBackgroundBrush}" 
+                    <Border Margin="28,14" Padding="26,22" 
+                            Background="{Binding ReaderStyle.PageBackground, Converter={x:Static local:HexToBrushConverter.Instance}}" 
                             BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8">
                         <StackPanel>
                             <!-- 顶部提示横条 -->
                             <Border Background="#181B22" BorderBrush="#252A36" BorderThickness="1" CornerRadius="5" Padding="12,8" Margin="0,0,0,16">
                                 <DockPanel>
-                                    <TextBlock Text="💡 提示：按住鼠标左键在下方自由拖拽框选任意长难句或短语，右侧长难句栏将实时同步该内容，点击「⚡ 精读分析此句」即可拆解语法结构。" 
+                                    <TextBlock Text="💡 提示：按住鼠标左键在下方自由拖拽框选任意长难句或短语，松开后将自动触发 AI 参考翻译与句法结构精读分析。" 
                                                Foreground="#8F98A8" FontSize="12" VerticalAlignment="Center"/>
                                 </DockPanel>
                             </Border>
 
-                            <!-- 原文整块展示与划词选择框 -->
+                            <!-- 原文整块展示与划词选择框 (字号、字体、粗细、颜色均响应 ReaderStyle 自定义) -->
                             <TextBox x:Name="FullArticleTextBox"
                                      Text="{Binding ArticleInput, Mode=OneWay}"
                                      IsReadOnly="True"
                                      TextWrapping="Wrap"
                                      Background="Transparent"
-                                     Foreground="{StaticResource TextPrimaryBrush}"
+                                     Foreground="{Binding ReaderStyle.TextColor, Converter={x:Static local:HexToBrushConverter.Instance}}"
                                      CaretBrush="#61AFEF"
                                      SelectionBrush="#3E4452"
                                      SelectionOpacity="0.65"
-                                     FontSize="15.5"
-                                     FontFamily="Segoe UI, Microsoft YaHei, Calibri"
+                                     FontSize="{Binding ReaderStyle.FontSize}"
+                                     FontFamily="{Binding ReaderStyle.FontFamily}"
+                                     FontWeight="{Binding ReaderStyle.FontWeight}"
                                      BorderThickness="0"
                                      Padding="0"
                                      Cursor="IBeam"
@@ -214,8 +217,9 @@
                     </ListBox.ItemContainerStyle>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <!-- 连贯自然段落卡片 -->
-                            <Border Padding="20,16" Background="{StaticResource CardBackgroundBrush}" 
+                            <!-- 连贯自然段落卡片 (响应 ReaderStyle 自定义) -->
+                            <Border Padding="20,16" 
+                                    Background="{Binding DataContext.ReaderStyle.PageBackground, RelativeSource={RelativeSource AncestorType=Window}, Converter={x:Static local:HexToBrushConverter.Instance}}" 
                                     BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8">
                                 <StackPanel>
                                     <!-- 英文段落：按句子组合流式排版，不单句换行！ -->
@@ -250,10 +254,14 @@
                                                         </ItemsControl.ItemsPanel>
                                                         <ItemsControl.ItemTemplate>
                                                             <DataTemplate>
-                                                                <TextBlock Text="{Binding RawText}" FontSize="15" LineHeight="26">
+                                                                <TextBlock Text="{Binding RawText}" 
+                                                                           FontSize="{Binding DataContext.ReaderStyle.FontSize, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                           FontFamily="{Binding DataContext.ReaderStyle.FontFamily, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                           FontWeight="{Binding DataContext.ReaderStyle.FontWeight, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                           LineHeight="26">
                                                                     <TextBlock.Style>
                                                                         <Style TargetType="TextBlock">
-                                                                            <Setter Property="Foreground" Value="#E2E5EB" />
+                                                                            <Setter Property="Foreground" Value="{Binding DataContext.ReaderStyle.TextColor, RelativeSource={RelativeSource AncestorType=Window}, Converter={x:Static local:HexToBrushConverter.Instance}}" />
                                                                             <Style.Triggers>
                                                                                 <DataTrigger Binding="{Binding HasExamHighlight}" Value="True">
                                                                                     <Setter Property="Foreground" Value="{Binding DictInfo.ColorHex}" />
@@ -329,7 +337,8 @@
                     </ListBox.ItemContainerStyle>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <Border Padding="16,14" Background="{StaticResource CardBackgroundBrush}" 
+                            <Border Padding="16,14" 
+                                    Background="{Binding DataContext.ReaderStyle.PageBackground, RelativeSource={RelativeSource AncestorType=Window}, Converter={x:Static local:HexToBrushConverter.Instance}}" 
                                     BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="8" Cursor="Hand"
                                     MouseLeftButtonDown="OnSentenceClick">
                                 <Grid>
@@ -348,10 +357,14 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding RawText}" FontSize="15" LineHeight="26">
+                                                <TextBlock Text="{Binding RawText}" 
+                                                           FontSize="{Binding DataContext.ReaderStyle.FontSize, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                           FontFamily="{Binding DataContext.ReaderStyle.FontFamily, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                           FontWeight="{Binding DataContext.ReaderStyle.FontWeight, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                           LineHeight="26">
                                                     <TextBlock.Style>
                                                         <Style TargetType="TextBlock">
-                                                            <Setter Property="Foreground" Value="#E2E5EB" />
+                                                            <Setter Property="Foreground" Value="{Binding DataContext.ReaderStyle.TextColor, RelativeSource={RelativeSource AncestorType=Window}, Converter={x:Static local:HexToBrushConverter.Instance}}" />
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding HasExamHighlight}" Value="True">
                                                                     <Setter Property="Foreground" Value="{Binding DictInfo.ColorHex}" />
@@ -388,7 +401,9 @@
 
                                     <!-- 右侧参考译文 -->
                                     <TextBlock Grid.Column="2" Text="{Binding ChineseTranslation}" 
-                                               Foreground="{StaticResource TextSecondaryBrush}" FontSize="14" LineHeight="25" TextWrapping="Wrap"/>
+                                               FontSize="{Binding DataContext.ReaderStyle.FontSize, RelativeSource={RelativeSource AncestorType=Window}}"
+                                               FontFamily="{Binding DataContext.ReaderStyle.FontFamily, RelativeSource={RelativeSource AncestorType=Window}}"
+                                               Foreground="{StaticResource TextSecondaryBrush}" LineHeight="25" TextWrapping="Wrap"/>
                                 </Grid>
                             </Border>
                         </DataTemplate>

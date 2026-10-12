@@ -22,4 +22,20 @@ public partial class SettingsWindow : Window
             };
         }
     }
+
+    private void OnTabModelClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is SettingsViewModel vm)
+        {
+            vm.SelectedTabIndex = 0;
+        }
+    }
+
+    private void OnTabThemeClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is SettingsViewModel vm)
+        {
+            vm.SelectedTabIndex = 1;
+        }
+    }
 }

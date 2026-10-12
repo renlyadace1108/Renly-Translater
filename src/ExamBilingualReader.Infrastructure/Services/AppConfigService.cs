@@ -29,6 +29,7 @@ public class AppConfigService
                 if (loaded != null && loaded.Providers.Count > 0)
                 {
                     CurrentSettings = loaded;
+                    CurrentSettings.ReaderStyle ??= new ReaderStyleConfig();
                     var active = CurrentSettings.Providers.FirstOrDefault(p => p.Id == CurrentSettings.ActiveProviderId)
                                  ?? CurrentSettings.Providers.First();
                     CurrentSettings.ActiveProviderId = active.Id;

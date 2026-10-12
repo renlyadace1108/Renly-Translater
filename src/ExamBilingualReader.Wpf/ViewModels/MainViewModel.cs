@@ -83,6 +83,10 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private LlmProviderConfig? _currentProvider;
 
+    // 阅读排版与外观主题配置
+    [ObservableProperty]
+    private ReaderStyleConfig _readerStyle = new();
+
     public string CurrentTranslation => !string.IsNullOrWhiteSpace(CurrentAnalysis?.Translation)
         ? CurrentAnalysis.Translation
         : (SelectedSentence?.ChineseTranslation ?? string.Empty);
@@ -116,6 +120,7 @@ public partial class MainViewModel : ObservableObject
         await _configService.InitializeAsync();
         await _dictionaryRepo.InitializeDatabaseAsync();
         CurrentProvider = _configService.GetActiveProvider();
+        ReaderStyle = _configService.CurrentSettings.ReaderStyle ?? new ReaderStyleConfig();
         await LoadExamPapersAsync();
         await LoadArticleAsync();
     }
@@ -404,6 +409,8 @@ public partial class MainViewModel : ObservableObject
     public void RefreshProvider()
     {
         CurrentProvider = _configService.GetActiveProvider();
+        ReaderStyle = _configService.CurrentSettings.ReaderStyle ?? new ReaderStyleConfig();
+        OnPropertyChanged(nameof(ReaderStyle));
     }
 
     [RelayCommand]

@@ -23,6 +23,31 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private bool _isTesting;
 
+    [ObservableProperty]
+    private ReaderStyleConfig _readerStyle = new();
+
+    [ObservableProperty]
+    private int _selectedTabIndex = 0;
+
+    public List<string> AvailableFontFamilies { get; } = [
+        "Segoe UI, Microsoft YaHei, Calibri",
+        "Microsoft YaHei",
+        "SimSun",
+        "KaiTi",
+        "Georgia",
+        "Times New Roman",
+        "Calibri",
+        "Arial",
+        "Cascadia Code, Consolas"
+    ];
+
+    public List<string> AvailableFontWeights { get; } = [
+        "Normal",
+        "Medium",
+        "SemiBold",
+        "Bold"
+    ];
+
     public SettingsViewModel(AppConfigService configService, IOpenAiClient llmClient)
     {
         _configService = configService;
@@ -40,6 +65,8 @@ public partial class SettingsViewModel : ObservableObject
 
         SelectedProvider = Providers.FirstOrDefault(p => p.Id == _configService.CurrentSettings.ActiveProviderId)
                            ?? Providers.FirstOrDefault();
+
+        ReaderStyle = _configService.CurrentSettings.ReaderStyle ?? new ReaderStyleConfig();
     }
 
     public event Action? RequestClose;
@@ -106,6 +133,12 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
+    public void ApplyThemePreset(string presetKey)
+    {
+        ReaderStyle.ApplyPreset(presetKey);
+    }
+
+    [RelayCommand]
     public async Task SaveSettingsAsync()
     {
         if (SelectedProvider == null || string.IsNullOrWhiteSpace(SelectedProvider.ApiKey))
@@ -128,6 +161,7 @@ public partial class SettingsViewModel : ObservableObject
 
         _configService.CurrentSettings.ActiveProviderId = SelectedProvider.Id;
         _configService.CurrentSettings.Providers = Providers.ToList();
+        _configService.CurrentSettings.ReaderStyle = ReaderStyle;
         await _configService.SaveAsync();
         TestStatus = "设置已保存！";
         RequestClose?.Invoke();

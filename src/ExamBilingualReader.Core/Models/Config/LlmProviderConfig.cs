@@ -97,7 +97,8 @@ public class LlmProviderConfig : INotifyPropertyChanged
 
 public class AppSettings
 {
-    public string ActiveProviderId { get; set; } = "deepseek";
+    public string ActiveProviderId { get; set; } = "custom_llm";
     public List<LlmProviderConfig> Providers { get; set; } = new();
     public string Theme { get; set; } = "System"; // Light, Dark, System
+    public ReaderStyleConfig ReaderStyle { get; set; } = new();
 }

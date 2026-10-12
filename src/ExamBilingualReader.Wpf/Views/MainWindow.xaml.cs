@@ -53,7 +53,24 @@ public partial class MainWindow : Window
     private void OnOpenSettingsClick(object sender, RoutedEventArgs e)
     {
         var settingsWindow = App.Services.GetRequiredService<SettingsWindow>();
-        settingsWindow.DataContext = App.Services.GetRequiredService<SettingsViewModel>();
+        var settingsVm = App.Services.GetRequiredService<SettingsViewModel>();
+        settingsVm.SelectedTabIndex = 0; // AI 模型与 API
+        settingsWindow.DataContext = settingsVm;
+        settingsWindow.Owner = this;
+        settingsWindow.ShowDialog();
+
+        if (DataContext is MainViewModel vm)
+        {
+            vm.RefreshProvider();
+        }
+    }
+
+    private void OnOpenStyleSettingsClick(object sender, RoutedEventArgs e)
+    {
+        var settingsWindow = App.Services.GetRequiredService<SettingsWindow>();
+        var settingsVm = App.Services.GetRequiredService<SettingsViewModel>();
+        settingsVm.SelectedTabIndex = 1; // 阅读排版与外观主题
+        settingsWindow.DataContext = settingsVm;
         settingsWindow.Owner = this;
         settingsWindow.ShowDialog();
 

@@ -157,3 +157,35 @@ public class StringToVisibilityConverter : IValueConverter
         throw new NotImplementedException();
     }
 }
+
+public class HexToBrushConverter : IValueConverter
+{
+    public static readonly HexToBrushConverter Instance = new();
+    private static readonly System.Windows.Media.BrushConverter BrushConverter = new();
+    private static readonly Dictionary<string, System.Windows.Media.SolidColorBrush> Cache = new();
+
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is string hex && !string.IsNullOrWhiteSpace(hex))
+        {
+            if (Cache.TryGetValue(hex, out var cached)) return cached;
+            try
+            {
+                var brush = (System.Windows.Media.SolidColorBrush)BrushConverter.ConvertFromString(hex)!;
+                brush.Freeze();
+                Cache[hex] = brush;
+                return brush;
+            }
+            catch
+            {
+                // 解析失败时回退默认
+            }
+        }
+        return System.Windows.Media.Brushes.Transparent;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
