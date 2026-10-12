@@ -16,6 +16,8 @@
         <SolidColorBrush x:Key="CardBackgroundBrush" Color="{StaticResource CardDark}" />
         <SolidColorBrush x:Key="CardHoverBrush" Color="{StaticResource CardHover}" />
         <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderDark}" />
+        <SolidColorBrush x:Key="BorderDarkBrush" Color="{StaticResource BorderDark}" />
+        <SolidColorBrush x:Key="BorderLightBrush" Color="{StaticResource BorderLight}" />
 
         <!-- 文本色阶体系 -->
         <SolidColorBrush x:Key="TextPrimaryBrush" Color="#ECEEF2" />
@@ -36,7 +38,7 @@
             <Setter Property="Background" Value="#22242B" />
             <Setter Property="Foreground" Value="#D6DAE2" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="{StaticResource BorderDark}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
             <Setter Property="Padding" Value="12,6" />
             <Setter Property="FontSize" Value="12.5" />
             <Setter Property="Cursor" Value="Hand" />
@@ -68,7 +70,7 @@
         <Style TargetType="TextBox">
             <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}" />
             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource BorderDark}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="Padding" Value="8,6" />
             <Setter Property="FontSize" Value="14" />

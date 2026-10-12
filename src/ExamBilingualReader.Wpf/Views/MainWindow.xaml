@@ -178,7 +178,7 @@
                                                                     <!-- 悬浮词典轻量浮层 -->
                                                                     <TextBlock.ToolTip>
                                                                         <ToolTip IsOpen="False" Visibility="{Binding HasExamHighlight, Converter={x:Static local:BooleanToVisibilityConverter.Instance}}">
-                                                                            <Border Background="#1E2025" BorderBrush="{StaticResource BorderDark}" BorderThickness="1" CornerRadius="6" Padding="12" MaxWidth="320">
+                                                                            <Border Background="#1E2025" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="12" MaxWidth="320">
                                                                                 <StackPanel>
                                                                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                                                                                         <TextBlock Text="{Binding DictInfo.Word}" FontWeight="Bold" FontSize="15" Foreground="#FFFFFF"/>
@@ -249,7 +249,7 @@
                                 <ItemsControl ItemsSource="{Binding CurrentAnalysis.Clauses}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border BorderBrush="{StaticResource BorderDark}" BorderThickness="0,0,0,1" Padding="0,6" Margin="0,0,0,4">
+                                            <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,6" Margin="0,0,0,4">
                                                 <StackPanel>
                                                     <TextBlock Text="{Binding Type}" FontWeight="Medium" Foreground="#D08770" FontSize="12.5"/>
                                                     <TextBlock Text="{Binding ClauseContent}" FontStyle="Italic" Foreground="#C0C5CE" TextWrapping="Wrap" Margin="0,2,0,4" FontSize="12"/>
