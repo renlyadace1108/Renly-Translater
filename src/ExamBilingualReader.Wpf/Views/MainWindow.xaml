@@ -95,9 +95,11 @@
                         </Grid>
                     </Border>
 
-                    <!-- 真题条目列表 (细腻卡片流) -->
+                    <!-- 真题条目列表 (隐藏滚动条，支持鼠标平滑滚动) -->
                     <ListBox Grid.Row="2" ItemsSource="{Binding ExamPapers}" SelectedItem="{Binding SelectedExamPaper}"
                              Background="Transparent" BorderThickness="0"
+                             ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              SelectionChanged="OnExamPaperSelectionChanged">
                         <ListBox.ItemContainerStyle>
                             <Style TargetType="ListBoxItem">
@@ -132,8 +134,8 @@
                 </Grid>
             </Border>
 
-            <!-- 双语对照阅读区 -->
-            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+            <!-- 双语对照阅读区 (隐藏原生物理滚动条，完全依靠鼠标滚轮平滑滚动) -->
+            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
                 <ItemsControl ItemsSource="{Binding Paragraphs}" Margin="28,20">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
@@ -219,7 +221,7 @@
 
             <!-- 右侧：长难句结构解析侧边栏 (极简学术面板) -->
             <Border Grid.Column="3" Background="{StaticResource PanelBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1,0,0,0" Padding="18">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled">
                     <StackPanel>
                         <TextBlock Text="长难句学术精读" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,16"/>
 

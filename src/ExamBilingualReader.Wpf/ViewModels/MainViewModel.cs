@@ -150,7 +150,9 @@ public partial class MainViewModel : ObservableObject
         StatusMessage = "正在分句与匹配本地考纲词库...";
         try
         {
-            var parsed = await _articleProcessor.ProcessRawArticleAsync(ArticleInput);
+            // 将耗时的文章分句与词库比对放到后台线程，确保 UI 线程完全不卡死
+            var parsed = await Task.Run(async () => await _articleProcessor.ProcessRawArticleAsync(ArticleInput));
+
             Paragraphs.Clear();
             foreach (var p in parsed)
             {

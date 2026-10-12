@@ -36,7 +36,7 @@ public static partial class DocumentTextExtractor
     }
 
     /// <summary>
-    /// 清理 Markdown 标记（保留标题文字与纯段落），滤除无用图片链接与排版字符
+    /// 清理 Markdown 与 HTML 标记（保留纯净英文段落与学术内容），彻底去除 HTML 实体与干扰排版
     /// </summary>
     public static string CleanMarkdownText(string markdown)
     {
@@ -52,6 +52,18 @@ public static partial class DocumentTextExtractor
         // 去除前置标题符号 ### 
         text = MarkdownHeadingRegex().Replace(text, "");
 
+        // 解码常见的 HTML 实体 (例如 &emsp; &nbsp; &lt; &gt; &#39; 等)
+        text = text.Replace("&emsp;", " ")
+                   .Replace("&ensp;", " ")
+                   .Replace("&nbsp;", " ")
+                   .Replace("&thinsp;", " ")
+                   .Replace("&quot;", "\"")
+                   .Replace("&apos;", "'")
+                   .Replace("&amp;", "&");
+
+        // 去除 HTML 标签 (例如 <u> </u>, <p> </p>, <div>, <span> 等)
+        text = HtmlTagRegex().Replace(text, " ");
+
         // 替换粗体斜体标记
         text = text.Replace("**", "").Replace("__", "").Replace("*", "").Replace("_", "");
 
@@ -66,7 +78,10 @@ public static partial class DocumentTextExtractor
         if (string.IsNullOrWhiteSpace(html))
             return string.Empty;
 
-        var text = HtmlTagRegex().Replace(html, " ");
+        var text = html.Replace("&emsp;", " ")
+                       .Replace("&ensp;", " ")
+                       .Replace("&nbsp;", " ");
+        text = HtmlTagRegex().Replace(text, " ");
         text = System.Net.WebUtility.HtmlDecode(text);
         return PdfExtractor.CleanAcademicPdfText(text);
     }
