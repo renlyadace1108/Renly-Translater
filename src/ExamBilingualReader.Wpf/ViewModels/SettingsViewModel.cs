@@ -42,10 +42,17 @@ public partial class SettingsViewModel : ObservableObject
                            ?? Providers.FirstOrDefault();
     }
 
+    public event Action? RequestClose;
+
     [RelayCommand]
     public async Task TestConnectionAsync()
     {
         if (SelectedProvider == null) return;
+        if (string.IsNullOrWhiteSpace(SelectedProvider.ApiKey))
+        {
+            TestStatus = "⚠️ 请先填写 API Key 再进行测试！";
+            return;
+        }
 
         IsTesting = true;
         TestStatus = "正在测试连接，请稍候...";
@@ -68,13 +75,17 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     public async Task SaveSettingsAsync()
     {
-        if (SelectedProvider != null)
+        if (SelectedProvider == null || string.IsNullOrWhiteSpace(SelectedProvider.ApiKey))
         {
-            _configService.CurrentSettings.ActiveProviderId = SelectedProvider.Id;
+            TestStatus = "⚠️ API Key 不能为空，请填写有效密钥后再保存！";
+            return;
         }
+
+        _configService.CurrentSettings.ActiveProviderId = SelectedProvider.Id;
         _configService.CurrentSettings.Providers = Providers.ToList();
         await _configService.SaveAsync();
         TestStatus = "设置已保存！";
+        RequestClose?.Invoke();
     }
 
     [RelayCommand]

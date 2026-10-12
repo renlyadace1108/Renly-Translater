@@ -83,6 +83,20 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private LlmProviderConfig? _currentProvider;
 
+    public string CurrentTranslation => !string.IsNullOrWhiteSpace(CurrentAnalysis?.Translation)
+        ? CurrentAnalysis.Translation
+        : (SelectedSentence?.ChineseTranslation ?? string.Empty);
+
+    partial void OnCurrentAnalysisChanged(SentenceAnalysisResult? value)
+    {
+        OnPropertyChanged(nameof(CurrentTranslation));
+    }
+
+    partial void OnSelectedSentenceChanged(BilingualSentencePair? value)
+    {
+        OnPropertyChanged(nameof(CurrentTranslation));
+    }
+
     public MainViewModel(
         AppConfigService configService,
         IOpenAiClient llmClient,
@@ -225,82 +239,171 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    public void SelectSentence(BilingualSentencePair sentence)
+    public async Task SelectSentenceAsync(BilingualSentencePair sentence)
     {
         if (sentence == null) return;
         SelectedSentence = sentence;
         CurrentAnalysis = sentence.AnalysisResult;
-        StatusMessage = $"已选中第 {sentence.OrderIndex} 句。可点击右侧「精读分析此句」进行深度学术拆解。";
+
+        if (sentence.AnalysisResult != null)
+        {
+            StatusMessage = $"已选中第 {sentence.OrderIndex} 句（已载入精读拆解与参考译文）。";
+            return;
+        }
+
+        // 选中后直接自动发起 AI 翻译与长难句学术精读分析
+        await AnalyzeCurrentSentenceAsync();
     }
 
-    [RelayCommand]
-    public void SelectCustomText(string text)
+    public void UpdateSelectionPreview(string text)
     {
         if (string.IsNullOrWhiteSpace(text)) return;
         text = text.Trim();
 
-        // 查找是否匹配现存句子，如果没有则创建一个临时选中项
+        // 拖选过程中更新选中文本显示，不触发繁重网络请求
+        if (SelectedSentence == null || SelectedSentence.EnglishSentence != text)
+        {
+            var match = FlatSentences.FirstOrDefault(s => s.EnglishSentence.Trim() == text);
+            if (match != null)
+            {
+                SelectedSentence = match;
+                CurrentAnalysis = match.AnalysisResult;
+            }
+            else
+            {
+                SelectedSentence = new BilingualSentencePair
+                {
+                    OrderIndex = 0,
+                    EnglishSentence = text
+                };
+                CurrentAnalysis = null;
+            }
+        }
+    }
+
+    public async Task SelectAndAutoAnalyzeTextAsync(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return;
+        text = text.Trim();
+
+        // 若划选的是单独英文单词，自动同步触发本地词典快速释义
+        if (!text.Contains(' ') && text.Length < 30 && text.All(c => char.IsLetter(c) || c == '-'))
+        {
+            _ = LookupWordAsync(text);
+        }
+
         var match = FlatSentences.FirstOrDefault(s => s.EnglishSentence.Trim() == text);
         if (match != null)
         {
             SelectedSentence = match;
             CurrentAnalysis = match.AnalysisResult;
+            if (match.AnalysisResult != null)
+            {
+                StatusMessage = $"已匹配第 {match.OrderIndex} 句（已载入解析与参考译文）。";
+                return;
+            }
         }
         else
         {
-            var customPair = new BilingualSentencePair
+            if (SelectedSentence != null && SelectedSentence.EnglishSentence.Trim() == text && CurrentAnalysis != null)
+            {
+                return;
+            }
+
+            SelectedSentence = new BilingualSentencePair
             {
                 OrderIndex = 0,
                 EnglishSentence = text
             };
-            SelectedSentence = customPair;
             CurrentAnalysis = null;
         }
 
-        StatusMessage = $"已拖选文本 ({text.Length} 字符)。点击右侧「精读分析此句」开始 AI 结构拆解。";
+        // 拖选完成后自动触发翻译与长难句AI拆解
+        await AnalyzeCurrentSentenceAsync();
     }
+
+    [RelayCommand]
+    public async Task SelectCustomTextAsync(string text)
+    {
+        await SelectAndAutoAnalyzeTextAsync(text);
+    }
+
+    public void SelectCustomText(string text)
+    {
+        _ = SelectAndAutoAnalyzeTextAsync(text);
+    }
+
+    private CancellationTokenSource? _analyzeCts;
 
     [RelayCommand]
     public async Task AnalyzeCurrentSentenceAsync()
     {
         if (SelectedSentence == null) return;
-        if (SelectedSentence.Status == AnalysisStatus.Analyzing) return; // 防重复点击
+        var sentenceToAnalyze = SelectedSentence;
 
         var provider = CurrentProvider ?? _configService.GetActiveProvider();
         if (provider == null || string.IsNullOrWhiteSpace(provider.ApiKey))
         {
-            StatusMessage = "提示: 请先在「模型设置」中配置 API Key 后再使用 AI 精读功能。";
+            StatusMessage = "提示: 请先在「模型设置」中配置 API Key 后再使用 AI 翻译与精读功能。";
             return;
         }
 
-        SelectedSentence.Status = AnalysisStatus.Analyzing;
+        // 取消前一个正在发起的解析请求，防止多余并发与乱序覆盖
+        _analyzeCts?.Cancel();
+        _analyzeCts?.Dispose();
+        _analyzeCts = new CancellationTokenSource();
+        var token = _analyzeCts.Token;
+
+        sentenceToAnalyze.Status = AnalysisStatus.Analyzing;
         IsBusy = true;
-        StatusMessage = $"正在通过 [{provider.Name}] 精读分析第 {SelectedSentence.OrderIndex} 句...";
+        StatusMessage = sentenceToAnalyze.OrderIndex > 0
+            ? $"正在自动翻译与精读分析第 {sentenceToAnalyze.OrderIndex} 句..."
+            : $"正在自动翻译与精读所选文本 ({sentenceToAnalyze.EnglishSentence.Length} 字符)...";
 
         try
         {
             var result = await Task.Run(async () => 
-                await _llmClient.AnalyzeSentenceAsync(provider, SelectedSentence.EnglishSentence));
+                await _llmClient.AnalyzeSentenceAsync(provider, sentenceToAnalyze.EnglishSentence, token), token);
 
-            SelectedSentence.AnalysisResult = result;
-            if (string.IsNullOrWhiteSpace(SelectedSentence.ChineseTranslation))
+            if (token.IsCancellationRequested) return;
+
+            sentenceToAnalyze.AnalysisResult = result;
+            if (string.IsNullOrWhiteSpace(sentenceToAnalyze.ChineseTranslation))
             {
-                SelectedSentence.ChineseTranslation = result.Translation;
+                sentenceToAnalyze.ChineseTranslation = result.Translation;
             }
-            SelectedSentence.Status = AnalysisStatus.Completed;
-            CurrentAnalysis = result;
-            StatusMessage = "句子学术精读分析完成！";
+            sentenceToAnalyze.Status = AnalysisStatus.Completed;
+
+            if (SelectedSentence == sentenceToAnalyze)
+            {
+                CurrentAnalysis = result;
+                StatusMessage = "翻译与长难句精读分析完成！";
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // 用户划选了新文本，已平滑取消上一个请求
         }
         catch (Exception ex)
         {
-            SelectedSentence.Status = AnalysisStatus.Failed;
-            SelectedSentence.ErrorMessage = ex.Message;
-            StatusMessage = $"长难句解析失败: {ex.Message}";
+            if (token.IsCancellationRequested) return;
+
+            sentenceToAnalyze.Status = AnalysisStatus.Failed;
+            sentenceToAnalyze.ErrorMessage = ex.Message;
+            StatusMessage = $"解析失败: {ex.Message}";
         }
         finally
         {
-            IsBusy = false;
+            if (!token.IsCancellationRequested)
+            {
+                IsBusy = false;
+            }
         }
+    }
+
+    public void RefreshProvider()
+    {
+        CurrentProvider = _configService.GetActiveProvider();
     }
 
     [RelayCommand]

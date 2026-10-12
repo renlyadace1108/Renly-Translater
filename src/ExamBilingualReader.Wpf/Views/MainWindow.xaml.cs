@@ -13,39 +13,39 @@ public partial class MainWindow : Window
         InitializeComponent();
     }
 
-    private void OnSentenceClick(object sender, MouseButtonEventArgs e)
+    private async void OnSentenceClick(object sender, MouseButtonEventArgs e)
     {
         if (sender is FrameworkElement element && element.DataContext is BilingualSentencePair pair)
         {
             if (DataContext is MainViewModel vm)
             {
-                vm.SelectSentenceCommand.Execute(pair);
+                await vm.SelectSentenceCommand.ExecuteAsync(pair);
             }
         }
     }
 
     private void OnFullArticleSelectionChanged(object sender, RoutedEventArgs e)
     {
-        // 当用户拖拽选择文本时更新
+        // 当用户拖拽选择文本时实时更新侧边栏文本预览（不触发频繁网络请求）
         if (sender is System.Windows.Controls.TextBox tb && DataContext is MainViewModel vm)
         {
             var text = tb.SelectedText;
             if (!string.IsNullOrWhiteSpace(text) && text.Trim().Length > 3)
             {
-                vm.SelectCustomText(text.Trim());
+                vm.UpdateSelectionPreview(text.Trim());
             }
         }
     }
 
-    private void OnFullArticleMouseUp(object sender, MouseButtonEventArgs e)
+    private async void OnFullArticleMouseUp(object sender, MouseButtonEventArgs e)
     {
-        // 鼠标松开时确认选区
+        // 鼠标松开时确认选区，自动触发翻译与AI拆解
         if (sender is System.Windows.Controls.TextBox tb && DataContext is MainViewModel vm)
         {
             var text = tb.SelectedText;
             if (!string.IsNullOrWhiteSpace(text) && text.Trim().Length > 1)
             {
-                vm.SelectCustomText(text.Trim());
+                await vm.SelectAndAutoAnalyzeTextAsync(text.Trim());
             }
         }
     }
@@ -56,6 +56,11 @@ public partial class MainWindow : Window
         settingsWindow.DataContext = App.Services.GetRequiredService<SettingsViewModel>();
         settingsWindow.Owner = this;
         settingsWindow.ShowDialog();
+
+        if (DataContext is MainViewModel vm)
+        {
+            vm.RefreshProvider();
+        }
     }
 
     private async void OnOpenNotebookClick(object sender, RoutedEventArgs e)

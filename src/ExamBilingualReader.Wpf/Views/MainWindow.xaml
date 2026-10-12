@@ -405,16 +405,36 @@
                     <StackPanel>
                         <TextBlock Text="长难句学术精读" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,16"/>
 
-                        <!-- 当前选句卡片 -->
+                        <!-- 当前选句/拖选卡片 -->
                         <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,14">
                             <StackPanel>
-                                <TextBlock Text="当前句子" Foreground="{StaticResource TextMutedBrush}" FontSize="11.5" Margin="0,0,0,6"/>
-                                <TextBlock Text="{Binding SelectedSentence.EnglishSentence, FallbackValue='(点击左侧任意句子开始精读拆解)'}" 
+                                <TextBlock Text="当前句子 / 选中文本" Foreground="{StaticResource TextMutedBrush}" FontSize="11.5" Margin="0,0,0,6"/>
+                                <TextBlock Text="{Binding SelectedSentence.EnglishSentence, FallbackValue='(拖选文本或点击句子自动翻译与拆解)'}" 
                                            TextWrapping="Wrap" Foreground="{StaticResource TextPrimaryBrush}" FontSize="13.5" LineHeight="21" FontWeight="Medium" Margin="0,0,0,10"/>
                                 
-                                <Button Content="⚡ 精读分析此句 (AI拆解)" Command="{Binding AnalyzeCurrentSentenceCommand}" 
-                                        Background="#2D3748" HorizontalAlignment="Left" Padding="14,6" FontSize="12"
-                                        IsEnabled="{Binding IsBusy, Converter={x:Static local:BooleanToInverseBooleanConverter.Instance}}" />
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="⚡ 重新精读分析" Command="{Binding AnalyzeCurrentSentenceCommand}" 
+                                            Background="#2D3748" HorizontalAlignment="Left" Padding="14,6" FontSize="12"
+                                            IsEnabled="{Binding IsBusy, Converter={x:Static local:BooleanToInverseBooleanConverter.Instance}}" />
+                                    <TextBlock Text="正在分析..." Foreground="#61AFEF" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="12"
+                                               Visibility="{Binding IsBusy, Converter={x:Static local:BooleanToVisibilityConverter.Instance}}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- 中文参考译文卡片 (醒目独立卡片，选择后自动呈现) -->
+                        <Border Background="{StaticResource CardBackgroundBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,14"
+                                Visibility="{Binding CurrentTranslation, Converter={x:Static local:StringToVisibilityConverter.Instance}}">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="中文参考译文" FontWeight="SemiBold" Foreground="#61AFEF" FontSize="13"/>
+                                    <Border Background="#1E2A3A" CornerRadius="3" Padding="5,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="AI 智能翻译" FontSize="10" Foreground="#81A1C1"/>
+                                    </Border>
+                                </StackPanel>
+                                <Border Background="#161C24" BorderBrush="#26384C" BorderThickness="1" CornerRadius="4" Padding="12,9">
+                                    <TextBlock Text="{Binding CurrentTranslation}" Foreground="#ECEEF2" FontSize="13.5" LineHeight="22" TextWrapping="Wrap"/>
+                                </Border>
                             </StackPanel>
                         </Border>
 

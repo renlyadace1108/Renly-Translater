@@ -43,9 +43,42 @@ public partial class App : Application
 
         base.OnStartup(e);
 
+        // 防止首次弹窗关闭时触发 WPF 自动退出
+        ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
+        var configService = Services.GetRequiredService<AppConfigService>();
+        await configService.InitializeAsync();
+
+        var activeProvider = configService.GetActiveProvider();
+        if (activeProvider == null || string.IsNullOrWhiteSpace(activeProvider.ApiKey))
+        {
+            // 首次打开软件强制配置 API Key，未配置不让进入
+            var settingsWindow = Services.GetRequiredService<SettingsWindow>();
+            var settingsVm = Services.GetRequiredService<SettingsViewModel>();
+            settingsWindow.DataContext = settingsVm;
+            settingsWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            settingsWindow.ShowDialog();
+
+            // 再次校验是否成功配置
+            activeProvider = configService.GetActiveProvider();
+            if (activeProvider == null || string.IsNullOrWhiteSpace(activeProvider.ApiKey))
+            {
+                MessageBox.Show(
+                    "使用本软件必须配置 API Key。由于未配置有效密钥，程序即将退出。", 
+                    "提示", 
+                    MessageBoxButton.OK, 
+                    MessageBoxImage.Information);
+                Shutdown();
+                return;
+            }
+        }
+
         var mainWindow = Services.GetRequiredService<MainWindow>();
         var mainVm = Services.GetRequiredService<MainViewModel>();
         mainWindow.DataContext = mainVm;
+
+        MainWindow = mainWindow;
+        ShutdownMode = ShutdownMode.OnMainWindowClose;
 
         await mainVm.InitializeAsync();
         mainWindow.Show();
