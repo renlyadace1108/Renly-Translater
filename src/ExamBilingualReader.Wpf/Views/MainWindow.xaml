@@ -180,7 +180,6 @@
                                      SelectionOpacity="0.65"
                                      FontSize="15.5"
                                      FontFamily="Segoe UI, Microsoft YaHei, Calibri"
-                                     LineHeight="28"
                                      BorderThickness="0"
                                      Padding="0"
                                      Cursor="IBeam"

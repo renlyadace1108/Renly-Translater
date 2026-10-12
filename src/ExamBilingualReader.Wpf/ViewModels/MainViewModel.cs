@@ -5,6 +5,7 @@ using ExamBilingualReader.Core.Models.Config;
 using ExamBilingualReader.Core.Models.ExamHub;
 using ExamBilingualReader.Core.Models.Reader;
 using ExamBilingualReader.Core.Models.Vocab;
+using ExamBilingualReader.Core.TextProcessing;
 using ExamBilingualReader.Infrastructure.Data;
 using ExamBilingualReader.Infrastructure.Services;
 
