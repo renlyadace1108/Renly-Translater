@@ -17,6 +17,7 @@
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="ExamBilingualReader" FontSize="16" FontWeight="Bold" Margin="0,0,20,0"/>
                     <Button Content="导入/重新解析文章" Command="{Binding LoadArticleCommand}" Margin="0,0,10,0"/>
+                    <Button Content="我的生词本" Click="OnOpenNotebookClick" Background="#059669" Margin="0,0,10,0"/>
                     <Button Content="模型配置 (BYOK)" Click="OnOpenSettingsClick" Background="#374151"/>
                 </StackPanel>
                 
@@ -92,6 +93,9 @@
                                                                                         </Border>
                                                                                     </StackPanel>
                                                                                     <TextBlock Text="{Binding DictInfo.DisplayTranslation}" TextWrapping="Wrap" Margin="0,6,0,0" Foreground="#E5E7EB" FontSize="13"/>
+                                                                                    <Button Content="★ 收藏至生词本" Margin="0,8,0,0" Padding="6,3" FontSize="11" Background="#3B82F6"
+                                                                                            Command="{Binding DataContext.AddWordToNotebookCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                                            CommandParameter="{Binding}" />
                                                                                 </StackPanel>
                                                                             </Border>
                                                                         </ToolTip>

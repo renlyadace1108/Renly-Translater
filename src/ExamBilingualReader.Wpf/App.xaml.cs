@@ -24,10 +24,12 @@ public partial class App : Application
         // 注册 ViewModels
         services.AddTransient<MainViewModel>();
         services.AddTransient<SettingsViewModel>();
+        services.AddTransient<NotebookViewModel>();
 
         // 注册 Views
         services.AddTransient<MainWindow>();
         services.AddTransient<SettingsWindow>();
+        services.AddTransient<NotebookWindow>();
 
         Services = services.BuildServiceProvider();
     }

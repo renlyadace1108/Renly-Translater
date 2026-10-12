@@ -31,4 +31,14 @@ public partial class MainWindow : Window
         settingsWindow.Owner = this;
         settingsWindow.ShowDialog();
     }
+
+    private async void OnOpenNotebookClick(object sender, RoutedEventArgs e)
+    {
+        var notebookWindow = App.Services.GetRequiredService<NotebookWindow>();
+        var vm = App.Services.GetRequiredService<NotebookViewModel>();
+        notebookWindow.DataContext = vm;
+        notebookWindow.Owner = this;
+        await vm.LoadEntriesAsync();
+        notebookWindow.ShowDialog();
+    }
 }

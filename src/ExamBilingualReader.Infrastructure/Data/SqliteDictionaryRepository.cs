@@ -11,6 +11,14 @@ public interface IDictionaryRepository
     Task InitializeDatabaseAsync();
     Task<EcdictEntry?> FindWordAsync(string word);
     Task<Dictionary<string, EcdictEntry>> BatchLookupAsync(IEnumerable<string> words);
+
+    // 生词本管理
+    Task<bool> AddToNotebookAsync(VocabularyNotebookEntry item);
+    Task<List<VocabularyNotebookEntry>> GetNotebookEntriesAsync();
+    Task<bool> DeleteNotebookEntryAsync(long id);
+
+    // 导入外部词库
+    Task<int> ImportCsvDictionaryAsync(string csvFilePath, IProgress<int>? progress = null);
 }
 
 public class SqliteDictionaryRepository : IDictionaryRepository
@@ -54,6 +62,21 @@ public class SqliteDictionaryRepository : IDictionaryRepository
             );
 
             CREATE INDEX IF NOT EXISTS idx_ecdict_word ON ecdict(word COLLATE NOCASE);
+
+            CREATE TABLE IF NOT EXISTS notebook (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                word TEXT NOT NULL,
+                phonetic TEXT,
+                translation TEXT,
+                level_tag TEXT,
+                context_sentence TEXT,
+                context_translation TEXT,
+                added_at TEXT NOT NULL,
+                review_count INTEGER DEFAULT 0,
+                mastered_level INTEGER DEFAULT 0
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_notebook_word ON notebook(word COLLATE NOCASE);
         """;
 
         await conn.ExecuteAsync(ddl);
@@ -64,6 +87,99 @@ public class SqliteDictionaryRepository : IDictionaryRepository
         {
             await SeedInitialSampleWordsAsync(conn);
         }
+    }
+
+    public async Task<bool> AddToNotebookAsync(VocabularyNotebookEntry item)
+    {
+        using var conn = CreateConnection();
+        const string sql = """
+            INSERT INTO notebook (word, phonetic, translation, level_tag, context_sentence, context_translation, added_at, review_count, mastered_level)
+            VALUES (@Word, @Phonetic, @Translation, @LevelTag, @ContextSentence, @ContextTranslation, @AddedAt, @ReviewCount, @MasteredLevel);
+        """;
+        var affected = await conn.ExecuteAsync(sql, item);
+        return affected > 0;
+    }
+
+    public async Task<List<VocabularyNotebookEntry>> GetNotebookEntriesAsync()
+    {
+        using var conn = CreateConnection();
+        const string sql = """
+            SELECT id, word, phonetic, translation, level_tag as LevelTag, 
+                   context_sentence as ContextSentence, context_translation as ContextTranslation, 
+                   added_at as AddedAt, review_count as ReviewCount, mastered_level as MasteredLevel
+            FROM notebook
+            ORDER BY id DESC;
+        """;
+        var list = await conn.QueryAsync<VocabularyNotebookEntry>(sql);
+        return list.ToList();
+    }
+
+    public async Task<bool> DeleteNotebookEntryAsync(long id)
+    {
+        using var conn = CreateConnection();
+        const string sql = "DELETE FROM notebook WHERE id = @id;";
+        var affected = await conn.ExecuteAsync(sql, new { id });
+        return affected > 0;
+    }
+
+    public async Task<int> ImportCsvDictionaryAsync(string csvFilePath, IProgress<int>? progress = null)
+    {
+        if (!File.Exists(csvFilePath))
+            return 0;
+
+        using var conn = CreateConnection();
+        await conn.OpenAsync();
+        using var transaction = conn.BeginTransaction();
+
+        const string insertSql = """
+            INSERT OR REPLACE INTO ecdict (word, phonetic, definition, translation, pos, tag, collins, oxford, exchange, detail, audio)
+            VALUES (@word, @phonetic, @definition, @translation, @pos, @tag, @collins, @oxford, @exchange, @detail, @audio);
+        """;
+
+        int totalImported = 0;
+        using var reader = new StreamReader(csvFilePath);
+        string? header = await reader.ReadLineAsync(); // 跳过表头
+
+        var batch = new List<object>();
+        string? line;
+        while ((line = await reader.ReadLineAsync()) != null)
+        {
+            var parts = line.Split(',');
+            if (parts.Length < 4) continue;
+
+            batch.Add(new
+            {
+                word = parts[0].Trim('"').Trim(),
+                phonetic = parts.Length > 1 ? parts[1].Trim('"') : "",
+                definition = parts.Length > 2 ? parts[2].Trim('"') : "",
+                translation = parts.Length > 3 ? parts[3].Trim('"') : "",
+                pos = parts.Length > 4 ? parts[4].Trim('"') : "",
+                tag = parts.Length > 7 ? parts[7].Trim('"') : "",
+                collins = 0,
+                oxford = 0,
+                exchange = "",
+                detail = "",
+                audio = ""
+            });
+
+            if (batch.Count >= 500)
+            {
+                await conn.ExecuteAsync(insertSql, batch, transaction);
+                totalImported += batch.Count;
+                progress?.Report(totalImported);
+                batch.Clear();
+            }
+        }
+
+        if (batch.Count > 0)
+        {
+            await conn.ExecuteAsync(insertSql, batch, transaction);
+            totalImported += batch.Count;
+            progress?.Report(totalImported);
+        }
+
+        transaction.Commit();
+        return totalImported;
     }
 
     public async Task<EcdictEntry?> FindWordAsync(string word)

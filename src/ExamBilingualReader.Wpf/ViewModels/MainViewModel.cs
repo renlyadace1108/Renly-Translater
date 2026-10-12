@@ -135,4 +135,26 @@ public partial class MainViewModel : ObservableObject
             IsBusy = false;
         }
     }
+
+    [RelayCommand]
+    public async Task AddWordToNotebookAsync(WordToken token)
+    {
+        if (token?.DictInfo == null) return;
+
+        var entry = new VocabularyNotebookEntry
+        {
+            Word = token.DictInfo.Word,
+            Phonetic = token.DictInfo.Phonetic,
+            Translation = token.DictInfo.DisplayTranslation,
+            LevelTag = token.DictInfo.PrimaryLevelName,
+            ContextSentence = SelectedSentence?.EnglishSentence ?? string.Empty,
+            ContextTranslation = SelectedSentence?.ChineseTranslation ?? string.Empty,
+            AddedAt = DateTime.Now
+        };
+
+        var success = await _dictionaryRepo.AddToNotebookAsync(entry);
+        StatusMessage = success 
+            ? $"已将单词 [{token.DictInfo.Word}] 收藏至生词本！" 
+            : $"收藏失败。";
+    }
 }
